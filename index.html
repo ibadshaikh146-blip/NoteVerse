@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoteVerse | Digital Student Notes & Resource Sharing System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ===================== HEADER / NAVIGATION ===================== -->
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="index.html">NoteVerse</a>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="notes-explorer.html">Browse BCA Notes</a></li>
+                <li><a href="upload.html">Upload</a></li>
+                <li><a href="my-account.html">My Account</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="register.html">Register</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- ===================== HERO / SEARCH SECTION ===================== -->
+        <section class="hero">
+            <h1>Find Notes for Every BCA Subject, Every Semester</h1>
+            <p>Handwritten notes, lecture slides, lab manuals and question papers — all in one place.</p>
+
+            <form class="search-form" action="notes-explorer.html" method="get">
+                <input
+                    type="text"
+                    name="query"
+                    placeholder="Search e.g. 'DBMS Unit 2' or 'Java Lab Manual'"
+                    required
+                >
+                <button type="submit">Search</button>
+            </form>
+        </section>
+
+        <!-- ===================== SEMESTER QUICK GRID ===================== -->
+        <section class="semester-grid">
+            <h2>Browse by Semester</h2>
+
+            <div class="grid-container">
+                <a href="notes-explorer.html?semester=1" class="semester-tile" data-code="SEM-01">Semester 1</a>
+                <a href="notes-explorer.html?semester=2" class="semester-tile" data-code="SEM-02">Semester 2</a>
+                <a href="notes-explorer.html?semester=3" class="semester-tile" data-code="SEM-03">Semester 3</a>
+                <a href="notes-explorer.html?semester=4" class="semester-tile" data-code="SEM-04">Semester 4</a>
+                <a href="notes-explorer.html?semester=5" class="semester-tile" data-code="SEM-05">Semester 5</a>
+                <a href="notes-explorer.html?semester=6" class="semester-tile" data-code="SEM-06">Semester 6</a>
+            </div>
+        </section>
+
+        <!-- ===================== PLATFORM METRICS ===================== -->
+        <section class="metrics">
+            <div class="metric-card">
+                <span class="metric-number" id="totalNotes">--</span>
+                <span class="metric-label">Total Live Notes</span>
+            </div>
+
+            <div class="metric-card">
+                <span class="metric-number" id="totalStudents">--</span>
+                <span class="metric-label">Active BCA Students</span>
+            </div>
+
+            <div class="metric-card">
+                <span class="metric-number" id="totalDownloads">--</span>
+                <span class="metric-label">Total Downloads</span>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ===================== FOOTER ===================== -->
+    <footer>
+        <p>&copy; 2026 NoteVerse. Built for BCA students, by a BCA student.</p>
+    </footer>
+    <!--
+        Phase 3 JS: animated metric counters. Sample numbers for now —
+        once MySQL is connected (PHP), these will come from real
+        COUNT(*) queries on notes / users / downloads tables instead
+        of the hardcoded targets below.
+    -->
+    <script>
+        function animateCount(id, target, duration = 1200) {
+            const el = document.getElementById(id);
+            const start = performance.now();
+
+            function tick(now) {
+                const progress = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                el.textContent = Math.floor(eased * target).toLocaleString();
+                if (progress < 1) requestAnimationFrame(tick);
+                else el.textContent = target.toLocaleString();
+            }
+            requestAnimationFrame(tick);
+        }
+
+        animateCount('totalNotes', 1240);
+        animateCount('totalStudents', 312);
+        animateCount('totalDownloads', 4890);
+    </script>
+
+</body>
+</html>

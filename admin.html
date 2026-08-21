@@ -1,0 +1,202 @@
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | NoteVerse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ===================== HEADER / NAVIGATION ===================== -->
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="index.html">NoteVerse</a>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="notes-explorer.html">Browse BCA Notes</a></li>
+                <li><a href="upload.html">Upload</a></li>
+                <li><a href="my-account.html">My Account</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="explorer-header">
+            <h1>Admin Panel — Pending Uploads</h1>
+            <p id="resultSummary">Loading pending uploads…</p>
+        </section>
+
+        <section style="max-width: 900px; margin: 0 auto; padding: 0 1.5rem;">
+            <div class="resource-list" id="pendingList">
+                <p class="explorer-status" id="loadingStatus">Loading…</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- ===================== FOOTER ===================== -->
+    <footer>
+        <p>&copy; 2026 NoteVerse. Built for BCA students, by a BCA student.</p>
+    </footer>
+
+    <script>
+        const pendingList = document.getElementById('pendingList');
+        const resultSummary = document.getElementById('resultSummary');
+
+        const TYPE_LABELS = {
+            NOTES: 'Notes',
+            SLIDES: 'Slides',
+            QUESTION_PAPER: 'Question Paper',
+            LAB_MANUAL: 'Lab Manual'
+        };
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function formatDate(isoDate) {
+            if (!isoDate) return '';
+            const date = new Date(isoDate);
+            if (Number.isNaN(date.getTime())) return '';
+            return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        // ---- Admin access check: must be logged in AND role === 'ADMIN' ----
+        async function checkAdminAccess() {
+            try {
+                const response = await fetch('me');
+                const data = await response.json();
+
+                if (!data.loggedIn) {
+                    window.location.href = 'login.html';
+                    return false;
+                }
+                if (data.role !== 'ADMIN') {
+                    // Not an admin — quietly send them home rather than
+                    // showing an empty/broken admin page.
+                    window.location.href = 'index.html';
+                    return false;
+                }
+                return true;
+            } catch (err) {
+                window.location.href = 'login.html';
+                return false;
+            }
+        }
+
+        function renderPending(notes) {
+            if (!notes.length) {
+                pendingList.innerHTML = '<p class="explorer-status">Nothing pending review right now.</p>';
+                resultSummary.textContent = 'All caught up — no pending uploads.';
+                return;
+            }
+
+            resultSummary.textContent = `${notes.length} upload(s) awaiting review.`;
+
+            pendingList.innerHTML = notes.map(note => `
+                <article class="resource-card" data-note-id="${note.noteId}">
+                    <div class="resource-card-top">
+                        <span class="resource-type-tag">${escapeHtml(TYPE_LABELS[note.noteType] || note.noteType)}</span>
+                        <span class="status-badge status-pending">Pending</span>
+                    </div>
+
+                    <h3>${escapeHtml(note.title)}</h3>
+
+                    <div class="resource-meta">
+                        <span>${escapeHtml(note.subjectName)}</span>
+                        <span>&bull;</span>
+                        <span>Semester ${note.semester}</span>
+                        <span>&bull;</span>
+                        <span>By ${escapeHtml(note.uploaderName)}</span>
+                        <span>&bull;</span>
+                        <span>${escapeHtml(formatDate(note.uploadDate))}</span>
+                    </div>
+
+                    ${note.description ? `<p style="margin: 0.75rem 0; color: #555;">${escapeHtml(note.description)}</p>` : ''}
+
+                    <div class="resource-actions">
+                        <a href="${escapeHtml(note.filePath)}" target="_blank" class="btn-download">View PDF</a>
+                        <button type="button" class="auth-submit approve-btn" style="width:auto; padding: 0.5rem 1.25rem;">Approve</button>
+                        <button type="button" class="filter-clear reject-btn" style="width:auto; padding: 0.5rem 1.25rem;">Reject</button>
+                    </div>
+
+                    <p class="form-status" style="margin-top: 0.5rem;"></p>
+                </article>
+            `).join('');
+
+            pendingList.querySelectorAll('.approve-btn').forEach(btn => {
+                btn.addEventListener('click', () => moderateNote(btn, 'APPROVE'));
+            });
+            pendingList.querySelectorAll('.reject-btn').forEach(btn => {
+                btn.addEventListener('click', () => moderateNote(btn, 'REJECT'));
+            });
+        }
+
+        async function moderateNote(triggerBtn, action) {
+            const card = triggerBtn.closest('.resource-card');
+            const noteId = card.dataset.noteId;
+            const status = card.querySelector('.form-status');
+
+            card.querySelectorAll('button').forEach(b => b.disabled = true);
+            status.textContent = action === 'APPROVE' ? 'Approving…' : 'Rejecting…';
+            status.className = 'form-status';
+
+            try {
+                const response = await fetch('admin/moderate-note', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ noteId, action })
+                });
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    card.style.transition = 'opacity 0.3s';
+                    card.style.opacity = '0';
+                    setTimeout(() => {
+                        card.remove();
+                        const remaining = pendingList.querySelectorAll('.resource-card').length;
+                        if (remaining === 0) {
+                            pendingList.innerHTML = '<p class="explorer-status">Nothing pending review right now.</p>';
+                        }
+                        resultSummary.textContent = `${remaining} upload(s) awaiting review.`;
+                    }, 300);
+                } else {
+                    status.textContent = result.message || 'Something went wrong.';
+                    status.className = 'form-status form-status-error';
+                    card.querySelectorAll('button').forEach(b => b.disabled = false);
+                }
+            } catch (err) {
+                status.textContent = 'Could not reach the server.';
+                status.className = 'form-status form-status-error';
+                card.querySelectorAll('button').forEach(b => b.disabled = false);
+            }
+        }
+
+        async function loadPending() {
+            try {
+                const response = await fetch('admin/pending-notes');
+                if (!response.ok) throw new Error('Failed to load');
+                const notes = await response.json();
+                renderPending(notes);
+            } catch (err) {
+                pendingList.innerHTML = '<p class="explorer-status">Could not load pending uploads.</p>';
+            }
+        }
+
+        (async () => {
+            const ok = await checkAdminAccess();
+            if (ok) loadPending();
+        })();
+    </script>
+
+</body>
+</html>

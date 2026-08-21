@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+         http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
+         version="4.0">
+
+    <display-name>NoteVerse</display-name>
+
+    <!-- Makes index.html the default page when visiting the app root -->
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+
+    <!--
+      Servlets are registered via @WebServlet annotations directly in the
+      Java source (see RegisterServlet.java), so no manual <servlet> /
+      <servlet-mapping> entries are needed here. Keep it that way unless
+      you have a specific reason to switch to XML-based mapping.
+    -->
+
+</web-app>

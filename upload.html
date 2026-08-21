@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload a Note | NoteVerse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ===================== HEADER / NAVIGATION ===================== -->
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="index.html">NoteVerse</a>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="notes-explorer.html">Browse BCA Notes</a></li>
+                <li><a href="my-account.html">My Account</a></li>
+                <li><a href="login.html">Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="auth-section upload-section">
+            <div class="auth-card" data-code="CONTRIBUTE">
+
+                <h1>Upload a Note</h1>
+                <p class="auth-subtitle">Share your notes with fellow BCA students. Uploads are reviewed before going live.</p>
+
+                <form action="#" method="post" enctype="multipart/form-data" class="auth-form" id="uploadForm" novalidate>
+
+                    <fieldset>
+                        <legend>Note Details</legend>
+
+                        <div class="field-group">
+                            <label for="noteTitle">Title</label>
+                            <input type="text" id="noteTitle" name="noteTitle" placeholder="e.g. Data Structures — Unit 3: Trees & Graphs" required>
+                        </div>
+
+                        <div class="field-row">
+                            <div class="field-group">
+                                <label for="uploadSemester">Semester</label>
+                                <select id="uploadSemester" name="semester" required>
+                                    <option value="" disabled selected>Select semester</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Semester 3</option>
+                                    <option value="4">Semester 4</option>
+                                    <option value="5">Semester 5</option>
+                                    <option value="6">Semester 6</option>
+                                </select>
+                            </div>
+
+                            <div class="field-group">
+                                <label for="uploadSubject">Subject</label>
+                                <select id="uploadSubject" name="subject" required>
+                                    <option value="" disabled selected>Select Subject first</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="resourceType">Resource Type</label>
+                            <select id="resourceType" name="resourceType" required>
+                                <option value="" disabled selected>Select type</option>
+                                <option value="NOTES">Handwritten Notes</option>
+                                <option value="SLIDES">Lecture Slides</option>
+                                <option value="QUESTION_PAPER">Question Paper</option>
+                                <option value="LAB_MANUAL">Lab Manual</option>
+                            </select>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="noteDescription">Description</label>
+                            <textarea id="noteDescription" name="noteDescription" rows="4" placeholder="Briefly describe what this resource covers..." required></textarea>
+                        </div>
+                    </fieldset>
+
+                    <fieldset>
+                        <legend>File</legend>
+
+                        <div class="field-group">
+                            <label for="noteFile">Upload PDF</label>
+                            <div class="file-drop" id="fileDrop">
+                                <input type="file" id="noteFile" name="noteFile" accept=".pdf" required>
+                                <span class="file-drop-text" id="fileDropText">Click to choose a PDF, or drag it here (max 20MB)</span>
+                            </div>
+                            <span class="field-error" id="noteFileError"></span>
+                        </div>
+                    </fieldset>
+
+                    <p class="form-status" id="uploadStatus"></p>
+
+                    <button type="submit" class="auth-submit">Submit for Review</button>
+                </form>
+
+                <p class="auth-footer-link">
+                    Every upload is checked by an admin before it appears in Browse Notes.
+                </p>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- ===================== FOOTER ===================== -->
+    <footer>
+        <p>&copy; 2026 NoteVerse. Built for BCA students, by a BCA student.</p>
+    </footer>
+
+    
+    
+
+<script>
+    // ---- Semester → Subject dropdown, now pulling REAL subjects from the database ----
+    const semesterSelect = document.getElementById('uploadSemester');
+    const subjectSelect = document.getElementById('uploadSubject');
+
+    async function loadSubjectsForSemester(semester) {
+        subjectSelect.innerHTML = '<option value="" disabled selected>Loading subjects…</option>';
+        try {
+            const response = await fetch(`subjects?semester=${encodeURIComponent(semester)}`);
+            const subjects = await response.json();
+            subjectSelect.innerHTML = '<option value="" disabled selected>Select subject</option>' +
+                subjects.map(s => `<option value="${s.subjectId}">${s.subjectName}</option>`).join('');
+        } catch (err) {
+            subjectSelect.innerHTML = '<option value="" disabled selected>Could not load subjects</option>';
+        }
+    }
+
+    semesterSelect.addEventListener('change', () => {
+        loadSubjectsForSemester(semesterSelect.value);
+    });
+
+    // ---- File picker validation (unchanged) ----
+    const fileInput = document.getElementById('noteFile');
+    const fileDropText = document.getElementById('fileDropText');
+    const MAX_SIZE_MB = 20;
+
+    fileInput.addEventListener('change', () => {
+        const fileError = document.getElementById('noteFileError');
+        fileError.textContent = '';
+
+        if (!fileInput.files.length) {
+            fileDropText.textContent = 'Click to choose a PDF, or drag it here (max 20MB)';
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+        const sizeMB = file.size / (1024 * 1024);
+
+        if (!isPDF) {
+            fileError.textContent = 'Only PDF files are accepted.';
+            fileInput.value = '';
+            fileDropText.textContent = 'Click to choose a PDF, or drag it here (max 20MB)';
+            return;
+        }
+
+        if (sizeMB > MAX_SIZE_MB) {
+            fileError.textContent = `File is ${sizeMB.toFixed(1)}MB — must be under ${MAX_SIZE_MB}MB.`;
+            fileInput.value = '';
+            fileDropText.textContent = 'Click to choose a PDF, or drag it here (max 20MB)';
+            return;
+        }
+
+        fileDropText.textContent = file.name;
+    });
+
+    // ---- Actual submission — sends a real multipart/form-data request ----
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const submitBtn = uploadForm.querySelector('.auth-submit');
+
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        uploadStatus.textContent = '';
+        uploadStatus.className = 'form-status';
+
+        if (!fileInput.files.length) {
+            document.getElementById('noteFileError').textContent = 'Please choose a PDF to upload.';
+            return;
+        }
+
+        // FormData automatically builds a proper multipart/form-data body,
+        // including the file — no need to JSON.stringify anything here.
+        const formData = new FormData(uploadForm);
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Uploading…';
+
+        try {
+            const response = await fetch('upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            let result;
+            try {
+                result = await response.json();
+            } catch {
+                result = { success: response.ok, message: response.ok ? 'Uploaded.' : 'Something went wrong.' };
+            }
+
+            if (response.ok && result.success) {
+                uploadStatus.textContent = result.message || 'Uploaded! Pending admin review.';
+                uploadStatus.className = 'form-status form-status-success';
+                uploadForm.reset();
+                fileDropText.textContent = 'Click to choose a PDF, or drag it here (max 20MB)';
+                subjectSelect.innerHTML = '<option value="" disabled selected>Select semester first</option>';
+            } else {
+                uploadStatus.textContent = result.message || 'Upload failed. Please check your details and try again.';
+                uploadStatus.className = 'form-status form-status-error';
+            }
+        } catch (err) {
+            uploadStatus.textContent = 'Could not reach the server. Please try again in a moment.';
+            uploadStatus.className = 'form-status form-status-error';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Submit for Review';
+        }
+    });
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | NoteVerse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ===================== HEADER / NAVIGATION ===================== -->
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="index.html">NoteVerse</a>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="notes-explorer.html">Browse BCA Notes</a></li>
+                <li><a href="upload.html">Upload</a></li>
+                <li><a href="my-account.html">My Account</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="register.html">Register</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="auth-section">
+            <div class="auth-card" data-code="WELCOME-BACK">
+
+                <h1>Log In to Your Account</h1>
+                <p class="auth-subtitle">Access your library, uploads, and download restricted notes.</p>
+
+                <form action="#" method="post" class="auth-form" id="loginForm" novalidate>
+
+                    <fieldset>
+                        <legend>Credentials</legend>
+
+                        <div class="field-group">
+                            <label for="identifier">Email / Student ID</label>
+                            <input type="text" id="identifier" name="identifier" placeholder="you@example.com or 23BCA045" required>
+                            <span class="field-error" id="identifierError"></span>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" placeholder="Your password" required>
+                            <span class="field-error" id="passwordError"></span>
+                        </div>
+
+                        <div class="field-inline">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="rememberMe" name="rememberMe">
+                                <span>Remember me</span>
+                            </label>
+
+                            <a href="forgot-password.html" class="inline-link">Forgot password?</a>
+                        </div>
+                    </fieldset>
+
+                    <p class="form-status" id="loginStatus"></p>
+
+                    <button type="submit" class="auth-submit">Log In</button>
+                </form>
+
+                <p class="auth-footer-link">
+                    New here? <a href="register.html">Register new account</a>
+                </p>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- ===================== FOOTER ===================== -->
+    <footer>
+        <p>&copy; 2026 NoteVerse. Built for BCA students, by a BCA student.</p>
+    </footer>
+    <!--
+        Phase 3 JS: basic required-field validation. Real authentication
+        (checking the password hash against the users table, starting a
+        session) happens in PHP once the backend is connected — this is
+        just catching empty submissions before they'd hit the server.
+    -->
+    <script>
+    const form = document.getElementById('loginForm');
+    const status = document.getElementById('loginStatus');
+    const submitBtn = form.querySelector('.auth-submit');
+
+    function setError(fieldId, message) {
+        document.getElementById(fieldId + 'Error').textContent = message;
+    }
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.field-error').forEach(el => el.textContent = '');
+        status.textContent = '';
+        status.className = 'form-status';
+
+        const identifier = document.getElementById('identifier').value.trim();
+        const password = document.getElementById('password').value;
+        const rememberMe = document.getElementById('rememberMe').checked;
+        let valid = true;
+
+        if (!identifier) {
+            setError('identifier', 'Enter your email or student ID.');
+            valid = false;
+        }
+
+        if (!password) {
+            setError('password', 'Enter your password.');
+            valid = false;
+        }
+
+        if (!valid) return;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Logging in…';
+
+        try {
+            const response = await fetch('login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ identifier, password, rememberMe })
+            });
+
+            let result;
+            try {
+                result = await response.json();
+            } catch {
+                result = { success: response.ok, message: response.ok ? 'Logged in.' : 'Something went wrong.' };
+            }
+
+            if (response.ok && result.success) {
+                status.textContent = result.message || 'Login successful! Redirecting…';
+                status.className = 'form-status form-status-success';
+                setTimeout(() => {
+                    window.location.href = 'my-account.html';
+                }, 800);
+            } else {
+                status.textContent = result.message || 'Login failed. Please check your details and try again.';
+                status.className = 'form-status form-status-error';
+            }
+        } catch (err) {
+            status.textContent = 'Could not reach the server. Please try again in a moment.';
+            status.className = 'form-status form-status-error';
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Log In';
+        }
+    });
+</script>
+
+
+</body>
+</html>

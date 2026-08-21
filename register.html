@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register | NoteVerse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ===================== HEADER / NAVIGATION ===================== -->
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="index.html">NoteVerse</a>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="notes-explorer.html">Browse BCA Notes</a></li>
+                <li><a href="upload.html">Upload</a></li>
+                <li><a href="my-account.html">My Account</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="register.html">Register</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="auth-section">
+            <div class="auth-card" data-code="NEW-STUDENT">
+
+                <h1>Create Your Student Account</h1>
+                <p class="auth-subtitle">Register to upload notes, download PDFs, and save your library.</p>
+
+                <form action="register" method="post" class="auth-form" id="registerForm" novalidate>
+
+                    <!-- ============ ACCOUNT INFO ============ -->
+                    <fieldset>
+                        <legend>Account Info</legend>
+
+                        <div class="field-group">
+                            <label for="fullName">Full Name</label>
+                            <input type="text" id="fullName" name="fullName" placeholder="e.g. Ibad Shaikh" required>
+                            <span class="field-error" id="fullNameError"></span>
+                        </div>
+
+                        <div class="field-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" placeholder="you@example.com" required>
+                            <span class="field-error" id="emailError"></span>
+                        </div>
+
+                        <div class="field-row">
+                            <div class="field-group">
+                                <label for="password">Password</label>
+                                <input type="password" id="password" name="password" placeholder="At least 8 characters" minlength="8" required>
+                                <span class="field-error" id="passwordError"></span>
+                            </div>
+
+                            <div class="field-group">
+                                <label for="confirmPassword">Confirm Password</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Re-enter password" minlength="8" required>
+                                <span class="field-error" id="confirmPasswordError"></span>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- ============ ACADEMIC PROFILE ============ -->
+                    <fieldset>
+                        <legend>Academic Profile</legend>
+
+                        <div class="field-row">
+                            <div class="field-group">
+                                <label for="rollNumber">BCA Roll Number / Student ID</label>
+                                <input type="text" id="rollNumber" name="rollNumber" placeholder="e.g. 230410131045" required>
+                                <span class="field-error" id="rollNumberError"></span>
+                            </div>
+
+                            <div class="field-group">
+                                <label for="semester">Current Semester</label>
+                                <select id="semester" name="semester" required>
+                                    <option value="" disabled selected>Select semester</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Semester 3</option>
+                                    <option value="4">Semester 4</option>
+                                    <option value="5">Semester 5</option>
+                                    <option value="6">Semester 6</option>
+                                </select>
+                                <span class="field-error" id="semesterError"></span>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <p class="form-status" id="registerStatus"></p>
+
+                    <button type="submit" class="auth-submit" id="registerSubmitBtn">Create Account</button>
+                </form>
+
+                <p class="auth-footer-link">
+                    Already registered? <a href="login.html">Log in instead</a>
+                </p>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- ===================== FOOTER ===================== -->
+    <footer>
+        <p>&copy; 2026 NoteVerse. Built for BCA students, by a BCA student.</p>
+    </footer>
+
+    <!--
+        Phase 5: wired to the Java/servlet backend. Client-side checks below
+        are still just a first line of defense — RegisterServlet + the DAO
+        layer must re-validate everything server-side (duplicate email,
+        duplicate roll number, password hashing, etc.), since JS can be bypassed.
+    -->
+    <script>
+        const form = document.getElementById('registerForm');
+        const status = document.getElementById('registerStatus');
+        const submitBtn = document.getElementById('registerSubmitBtn');
+
+        function setError(fieldId, message) {
+            document.getElementById(fieldId + 'Error').textContent = message;
+        }
+
+        function clearErrors() {
+            document.querySelectorAll('.field-error').forEach(el => el.textContent = '');
+            status.textContent = '';
+            status.className = 'form-status';
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearErrors();
+
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const rollNumber = document.getElementById('rollNumber').value.trim();
+            const semester = document.getElementById('semester').value;
+
+            let valid = true;
+
+            if (fullName.length < 2) {
+                setError('fullName', 'Please enter your full name.');
+                valid = false;
+            }
+
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailPattern.test(email)) {
+                setError('email', 'Enter a valid email address.');
+                valid = false;
+            }
+
+            if (password.length < 8) {
+                setError('password', 'Password must be at least 8 characters.');
+                valid = false;
+            }
+
+            if (confirmPassword !== password) {
+                setError('confirmPassword', 'Passwords do not match.');
+                valid = false;
+            }
+
+            const rollPattern = /^\d{12}$/;
+if (!rollPattern.test(rollNumber)) {
+    setError('rollNumber', 'Roll number must be exactly 12 digits.');
+    valid = false;
+}
+            
+
+            if (!semester) {
+                setError('semester', 'Please select your current semester.');
+                valid = false;
+            }
+
+            if (!valid) return;
+
+            // ---- Backend call ----
+            // Adjust the URL below (currently "/register") if your servlet
+            // mapping in web.xml or @WebServlet annotation differs.
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating account…';
+
+            try {
+                const response = await fetch('register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        fullName,
+                        email,
+                        password,
+                        rollNumber,
+                        semester
+                    })
+                });
+
+                // Adjust this parsing if your servlet returns something
+                // other than JSON (e.g. plain text or a redirect).
+                let result;
+                try {
+                    result = await response.json();
+                } catch {
+                    result = { success: response.ok, message: response.ok ? 'Account created.' : 'Something went wrong.' };
+                }
+
+                if (response.ok && result.success) {
+                    status.textContent = result.message || 'Account created! Redirecting to login…';
+                    status.className = 'form-status form-status-success';
+                    form.reset();
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 1200);
+                } else {
+                    status.textContent = result.message || 'Registration failed. Please check your details and try again.';
+                    status.className = 'form-status form-status-error';
+                }
+            } catch (err) {
+                status.textContent = 'Could not reach the server. Please try again in a moment.';
+                status.className = 'form-status form-status-error';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+            }
+        });
+    </script>
+
+</body>
+</html>

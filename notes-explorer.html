@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse BCA Notes | NoteVerse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ===================== HEADER / NAVIGATION ===================== -->
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="index.html">NoteVerse</a>
+            </div>
+
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="notes-explorer.html">Browse BCA Notes</a></li>
+                <li><a href="upload.html">Upload</a></li>
+                <li><a href="my-account.html">My Account</a></li>
+                <li><a href="login.html">Login</a></li>
+                <li><a href="register.html">Register</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="explorer-header">
+            <h1>Browse BCA Notes</h1>
+            <p id="resultSummary">Showing all resources across every semester.</p>
+        </section>
+
+        <section class="explorer-layout">
+
+            <!-- ===================== FILTER SIDEBAR ===================== -->
+            <aside class="filter-sidebar">
+                <div class="filter-block">
+                    <h2>Search</h2>
+                    <input type="text" id="searchInput" class="filter-select" placeholder="Search by title...">
+                </div>
+
+                <div class="filter-block">
+                    <h2>Semester</h2>
+                    <select id="semesterFilter" class="filter-select">
+                        <option value="">All Semesters</option>
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                        <option value="3">Semester 3</option>
+                        <option value="4">Semester 4</option>
+                        <option value="5">Semester 5</option>
+                        <option value="6">Semester 6</option>
+                    </select>
+                </div>
+
+                <div class="filter-block">
+                    <h2>Subject</h2>
+                    <select id="subjectFilter" class="filter-select">
+                        <option value="">All Subjects</option>
+                        <!-- populated dynamically based on semester in Phase 3 (JS) -->
+                    </select>
+                </div>
+
+                <div class="filter-block">
+                    <h2>Resource Type</h2>
+                    <div class="checkbox-list">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="resourceType" value="NOTES" checked>
+                            <span>Handwritten Notes</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="resourceType" value="SLIDES" checked>
+                            <span>Lecture Slides</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="resourceType" value="QUESTION_PAPER" checked>
+                            <span>Question Papers</span>
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="resourceType" value="LAB_MANUAL" checked>
+                            <span>Lab Manuals</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="button" class="filter-clear" id="clearFilters">Clear Filters</button>
+            </aside>
+
+            <!-- ===================== RESOURCE LIST ===================== -->
+            <div class="resource-list" id="resourceList">
+                <p class="explorer-status" id="loadingStatus">Loading notes…</p>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- ===================== FOOTER ===================== -->
+    <footer>
+        <p>&copy; 2026 NoteVerse. Built for BCA students, by a BCA student.</p>
+    </footer>
+
+    <!--
+        Phase 5: filters call FilterNotesServlet (/notes) and SubjectsServlet
+        (/subjects) so semester, subject, and type dropdowns query MySQL live.
+    -->
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const semesterSelect = document.getElementById('semesterFilter');
+        const subjectSelect = document.getElementById('subjectFilter');
+        const searchInput = document.getElementById('searchInput');
+        const typeCheckboxes = document.querySelectorAll('input[name="resourceType"]');
+        const resultSummary = document.getElementById('resultSummary');
+        const resourceList = document.getElementById('resourceList');
+
+        const TYPE_LABELS = {
+            NOTES: 'Notes',
+            SLIDES: 'Slides',
+            QUESTION_PAPER: 'Question Paper',
+            LAB_MANUAL: 'Lab Manual'
+        };
+
+        let searchTimer = null;
+
+        function getCheckedTypes() {
+            return Array.from(typeCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function formatUploadDate(isoDate) {
+            if (!isoDate) return 'Recently uploaded';
+            const date = new Date(isoDate);
+            if (Number.isNaN(date.getTime())) return 'Recently uploaded';
+            return date.toLocaleDateString('en-IN', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        function updateSummary(count, query, semester) {
+            if (query) {
+                resultSummary.textContent = `Showing ${count} result(s) for "${query}".`;
+            } else if (semester) {
+                resultSummary.textContent = `Showing ${count} resource(s) for Semester ${semester}.`;
+            } else if (count === 0) {
+                resultSummary.textContent = 'No resources match your filters.';
+            } else {
+                resultSummary.textContent = `Showing ${count} resource(s) across every semester.`;
+            }
+        }
+
+        function renderNotes(notes) {
+            if (!notes.length) {
+                resourceList.innerHTML = '<p class="explorer-status">No notes found for the selected filters.</p>';
+                return;
+            }
+
+            resourceList.innerHTML = notes.map(note => {
+                const typeLabel = TYPE_LABELS[note.noteType] || note.noteType;
+                const detailUrl = `note-detail.html?id=${note.noteId}`;
+                const downloadUrl = note.filePath ? escapeHtml(note.filePath) : '#';
+
+                return `
+                    <article class="resource-card" data-semester="${note.semester}" data-type="${escapeHtml(note.noteType)}" data-title="${escapeHtml(note.title.toLowerCase())}">
+                        <div class="resource-card-top">
+                            <span class="resource-type-tag">${escapeHtml(typeLabel)}</span>
+                            <span class="resource-code">${escapeHtml(note.subjectName)}</span>
+                        </div>
+
+                        <h3><a href="${detailUrl}">${escapeHtml(note.title)}</a></h3>
+
+                        <div class="resource-meta">
+                            <span>${escapeHtml(note.subjectName)}</span>
+                            <span>&bull;</span>
+                            <span>Semester ${note.semester}</span>
+                            <span>&bull;</span>
+                            <span>${note.downloadCount} download${note.downloadCount === 1 ? '' : 's'}</span>
+                            <span>&bull;</span>
+                            <span>${escapeHtml(formatUploadDate(note.uploadDate))}</span>
+                        </div>
+
+                        <div class="resource-actions">
+                            <a href="${downloadUrl}" class="btn-download" ${note.filePath ? 'download' : ''}>Download PDF</a>
+                            <button type="button" class="btn-bookmark" aria-label="Bookmark this note">&#9825;</button>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+
+            resourceList.querySelectorAll('.btn-bookmark').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    btn.classList.toggle('bookmarked');
+                    btn.innerHTML = btn.classList.contains('bookmarked') ? '&#9829;' : '&#9825;';
+                });
+            });
+        }
+
+        async function loadSubjects() {
+            const semester = semesterSelect.value;
+            const selectedSubject = subjectSelect.value;
+            const url = semester ? `subjects?semester=${encodeURIComponent(semester)}` : 'subjects';
+
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to load subjects');
+                const subjects = await response.json();
+
+                subjectSelect.innerHTML = '<option value="">All Subjects</option>' +
+                    subjects.map(subject =>
+                        `<option value="${subject.subjectId}">${escapeHtml(subject.subjectName)}</option>`
+                    ).join('');
+
+                if (selectedSubject && [...subjectSelect.options].some(opt => opt.value === selectedSubject)) {
+                    subjectSelect.value = selectedSubject;
+                }
+            } catch (error) {
+                subjectSelect.innerHTML = '<option value="">All Subjects</option>';
+            }
+        }
+
+        async function loadNotes() {
+            const semester = semesterSelect.value;
+            const subjectId = subjectSelect.value;
+            const query = searchInput.value.trim();
+            const checkedTypes = getCheckedTypes();
+
+            const requestParams = new URLSearchParams();
+            if (semester) requestParams.set('semester', semester);
+            if (subjectId) requestParams.set('subjectId', subjectId);
+            if (query) requestParams.set('query', query);
+            if (checkedTypes.length) requestParams.set('noteType', checkedTypes.join(','));
+
+            resourceList.innerHTML = '<p class="explorer-status" id="loadingStatus">Loading notes…</p>';
+
+            try {
+                const response = await fetch(`notes?${requestParams.toString()}`);
+                if (!response.ok) throw new Error('Failed to load notes');
+                const notes = await response.json();
+                renderNotes(notes);
+                updateSummary(notes.length, query, semester);
+            } catch (error) {
+                resourceList.innerHTML = '<p class="explorer-status">Could not load notes. Check that Tomcat and MySQL are running.</p>';
+                updateSummary(0, query, semester);
+            }
+        }
+
+        function scheduleSearch() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(loadNotes, 300);
+        }
+
+        const semesterFromURL = params.get('semester');
+        const queryFromURL = params.get('query');
+
+        if (semesterFromURL) semesterSelect.value = semesterFromURL;
+        if (queryFromURL) searchInput.value = queryFromURL;
+
+        loadSubjects().then(loadNotes);
+
+        semesterSelect.addEventListener('change', async () => {
+            subjectSelect.value = '';
+            await loadSubjects();
+            await loadNotes();
+        });
+
+        subjectSelect.addEventListener('change', loadNotes);
+        searchInput.addEventListener('input', scheduleSearch);
+        typeCheckboxes.forEach(cb => cb.addEventListener('change', loadNotes));
+
+        document.getElementById('clearFilters').addEventListener('click', async () => {
+            semesterSelect.value = '';
+            searchInput.value = '';
+            subjectSelect.value = '';
+            typeCheckboxes.forEach(cb => cb.checked = true);
+            await loadSubjects();
+            await loadNotes();
+        });
+    </script>
+
+</body>
+</html>

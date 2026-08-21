@@ -1,0 +1,36 @@
+# Compiled class files
+*.class
+**/build/
+**/target/
+**/WEB-INF/classes/
+
+# Sensitive config
+db.properties
+
+# Tomcat
+*.war
+*.ear
+catalina.out
+
+# IDE - VS Code
+.vscode/
+*.code-workspace
+
+# IDE - IntelliJ / Eclipse (just in case)
+.idea/
+*.iml
+.settings/
+.classpath
+.project
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Uploaded files (if NoteVerse saves user uploads locally, e.g. notes/pdfs)
+uploads/
+*.class WEB-INF/classes/ db.properties uploads/ .vscode/ *.
