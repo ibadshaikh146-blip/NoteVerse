@@ -1,1 +1,8 @@
-FROM tomcat:9.0-jdk11 RUN rm -rf /usr/local/tomcat/webapps/ROOT COPY WEB-INF /usr/local/tomcat/webapps/ROOT/WEB-INF COPY *.html /usr/local/tomcat/webapps/ROOT/ COPY *.css /usr/local/tomcat/webapps/ROOT/ COPY WEB-INF/lib/*.jar /usr/local/tomcat/lib/ EXPOSE 8080 CMD ["catalina.sh", "run"] 
+FROM tomcat:9.0-jdk11
+RUN rm -rf /usr/local/tomcat/webapps/ROOT
+COPY WEB-INF /usr/local/tomcat/webapps/ROOT/WEB-INF
+COPY *.html /usr/local/tomcat/webapps/ROOT/
+COPY *.css /usr/local/tomcat/webapps/ROOT/
+COPY WEB-INF/lib/*.jar /usr/local/tomcat/lib/
+EXPOSE 8080
+CMD ["catalina.sh", "run"]
