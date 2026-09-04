@@ -105,6 +105,7 @@
     <!--
         Phase 5: filters call FilterNotesServlet (/notes) and SubjectsServlet
         (/subjects) so semester, subject, and type dropdowns query MySQL live.
+        Phase 7: bookmark button wired to /bookmarks (real toggle + real state).
     -->
     <script>
         const params = new URLSearchParams(window.location.search);
@@ -173,7 +174,7 @@
                 const downloadUrl = note.filePath ? escapeHtml(note.filePath) : '#';
 
                 return `
-                    <article class="resource-card" data-semester="${note.semester}" data-type="${escapeHtml(note.noteType)}" data-title="${escapeHtml(note.title.toLowerCase())}">
+                    <article class="resource-card" data-note-id="${note.noteId}" data-semester="${note.semester}" data-type="${escapeHtml(note.noteType)}" data-title="${escapeHtml(note.title.toLowerCase())}">
                         <div class="resource-card-top">
                             <span class="resource-type-tag">${escapeHtml(typeLabel)}</span>
                             <span class="resource-code">${escapeHtml(note.subjectName)}</span>
@@ -200,11 +201,53 @@
             }).join('');
 
             resourceList.querySelectorAll('.btn-bookmark').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    btn.classList.toggle('bookmarked');
-                    btn.innerHTML = btn.classList.contains('bookmarked') ? '&#9829;' : '&#9825;';
+                btn.addEventListener('click', async () => {
+                    const noteId = btn.closest('.resource-card').dataset.noteId;
+                    btn.disabled = true;
+                    try {
+                        const response = await fetch('bookmarks', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ noteId: Number(noteId) })
+                        });
+                        if (response.status === 401) {
+                            window.location.href = 'login.html';
+                            return;
+                        }
+                        const result = await response.json();
+                        if (result.success) {
+                            btn.classList.toggle('bookmarked', result.bookmarked);
+                            btn.innerHTML = result.bookmarked ? '&#9829;' : '&#9825;';
+                        }
+                    } catch (err) {
+                        // leave the button as-is; user can retry
+                    } finally {
+                        btn.disabled = false;
+                    }
                 });
             });
+
+            markBookmarkedCards();
+        }
+
+        async function markBookmarkedCards() {
+            try {
+                const response = await fetch('bookmarks');
+                if (!response.ok) return; // not logged in — leave all hearts empty
+                const bookmarked = await response.json();
+                const bookmarkedIds = new Set(bookmarked.map(n => n.noteId));
+
+                resourceList.querySelectorAll('.resource-card').forEach(card => {
+                    const noteId = Number(card.dataset.noteId);
+                    if (bookmarkedIds.has(noteId)) {
+                        const btn = card.querySelector('.btn-bookmark');
+                        btn.classList.add('bookmarked');
+                        btn.innerHTML = '&#9829;';
+                    }
+                });
+            } catch (err) {
+                // silently leave hearts empty
+            }
         }
 
         async function loadSubjects() {

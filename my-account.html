@@ -35,7 +35,7 @@
                 <h1>Ibad Shaikh</h1>
                 <p class="profile-roll">23BCA045 &bull; Semester 2</p>
 
-                                <dl class="profile-stats">
+                <dl class="profile-stats">
                     <div>
                         <dt>Uploads</dt>
                         <dd id="uploadsCount">—</dd>
@@ -102,7 +102,7 @@
                 </div>
 
                 <!-- ============ MY UPLOADS ============ -->
-                                <div class="tab-panel" id="panel-uploads">
+                <div class="tab-panel" id="panel-uploads">
                     <div class="resource-list" id="uploadsList">
                         <p class="status-loading">Loading your uploads…</p>
                     </div>
@@ -110,38 +110,8 @@
 
                 <!-- ============ BOOKMARKS ============ -->
                 <div class="tab-panel" id="panel-bookmarks" hidden>
-                    <div class="resource-list">
-
-                        <article class="resource-card">
-                            <div class="resource-card-top">
-                                <span class="resource-type-tag">Lab Manual</span>
-                                <span class="resource-code">BCA204</span>
-                            </div>
-                            <h3><a href="note-detail.html">DBMS — MySQL Lab Manual (18 Practicals)</a></h3>
-                            <div class="resource-meta">
-                                <span>By Rohan Patel</span>
-                                <span>&bull;</span>
-                                <span>Semester 2</span>
-                                <span>&bull;</span>
-                                <span>5.0&#9733;</span>
-                            </div>
-                        </article>
-
-                        <article class="resource-card">
-                            <div class="resource-card-top">
-                                <span class="resource-type-tag">Slides</span>
-                                <span class="resource-code">BCA305</span>
-                            </div>
-                            <h3><a href="note-detail.html">Java Fundamentals — OOP Concepts Slide Deck</a></h3>
-                            <div class="resource-meta">
-                                <span>By Aisha Khan</span>
-                                <span>&bull;</span>
-                                <span>Semester 3</span>
-                                <span>&bull;</span>
-                                <span>4.5&#9733;</span>
-                            </div>
-                        </article>
-
+                    <div class="resource-list" id="bookmarksList">
+                        <p class="status-loading">Loading your bookmarks…</p>
                     </div>
                 </div>
 
@@ -156,6 +126,11 @@
 
   <script>
     let currentUser = null; // cached so Edit Profile can pre-fill without a second fetch
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
 
     // ---- Load the real logged-in user's data ----
     async function loadCurrentUser() {
@@ -189,7 +164,112 @@
             `${data.rollNumber} \u2022 Semester ${data.semester}`;
     }
 
+    // ---- Load the real logged-in user's uploads ----
+    async function loadMyUploads() {
+        const listEl = document.getElementById('uploadsList');
+        const countEl = document.getElementById('uploadsCount');
+
+        try {
+            const response = await fetch('my-uploads');
+            if (!response.ok) {
+                listEl.innerHTML = '<p class="status-error">Could not load your uploads.</p>';
+                return;
+            }
+            const notes = await response.json();
+
+            countEl.textContent = notes.length;
+
+            if (notes.length === 0) {
+                listEl.innerHTML = '<p class="status-empty">You haven\u2019t uploaded any notes yet.</p>';
+                return;
+            }
+
+            const statusClass = {
+                APPROVED: 'status-approved',
+                PENDING: 'status-pending',
+                REJECTED: 'status-rejected'
+            };
+            const statusLabel = {
+                APPROVED: 'Approved',
+                PENDING: 'Pending Review',
+                REJECTED: 'Rejected'
+            };
+            const typeLabel = {
+                NOTES: 'Notes',
+                SLIDES: 'Slides',
+                QUESTION_PAPER: 'Question Paper',
+                LAB_MANUAL: 'Lab Manual'
+            };
+
+            listEl.innerHTML = notes.map(n => `
+                <article class="resource-card">
+                    <div class="resource-card-top">
+                        <span class="resource-type-tag">${typeLabel[n.noteType] || n.noteType}</span>
+                        <span class="status-badge ${statusClass[n.status] || ''}">${statusLabel[n.status] || n.status}</span>
+                    </div>
+                    <h3>${escapeHtml(n.title)}</h3>
+                    <div class="resource-meta">
+                        <span>Semester ${n.semester}</span>
+                        <span>&bull;</span>
+                        <span>${escapeHtml(n.subjectName)}</span>
+                        <span>&bull;</span>
+                        <span>${n.downloadCount} downloads</span>
+                    </div>
+                </article>
+            `).join('');
+
+        } catch (err) {
+            listEl.innerHTML = '<p class="status-error">Could not reach the server.</p>';
+        }
+    }
+
+    // ---- Load the real logged-in user's bookmarks ----
+    async function loadMyBookmarks() {
+        const listEl = document.getElementById('bookmarksList');
+
+        try {
+            const response = await fetch('bookmarks');
+            if (!response.ok) {
+                listEl.innerHTML = '<p class="status-error">Could not load your bookmarks.</p>';
+                return;
+            }
+            const notes = await response.json();
+
+            if (notes.length === 0) {
+                listEl.innerHTML = '<p class="status-empty">You haven\u2019t bookmarked any notes yet.</p>';
+                return;
+            }
+
+            const typeLabel = {
+                NOTES: 'Notes',
+                SLIDES: 'Slides',
+                QUESTION_PAPER: 'Question Paper',
+                LAB_MANUAL: 'Lab Manual'
+            };
+
+            listEl.innerHTML = notes.map(n => `
+                <article class="resource-card">
+                    <div class="resource-card-top">
+                        <span class="resource-type-tag">${typeLabel[n.noteType] || n.noteType}</span>
+                        <span class="resource-code">${escapeHtml(n.subjectName)}</span>
+                    </div>
+                    <h3><a href="note-detail.html?id=${n.noteId}">${escapeHtml(n.title)}</a></h3>
+                    <div class="resource-meta">
+                        <span>Semester ${n.semester}</span>
+                        <span>&bull;</span>
+                        <span>${n.downloadCount} downloads</span>
+                    </div>
+                </article>
+            `).join('');
+
+        } catch (err) {
+            listEl.innerHTML = '<p class="status-error">Could not reach the server.</p>';
+        }
+    }
+
     loadCurrentUser();
+    loadMyUploads();
+    loadMyBookmarks();
 
     // ---- Log Out button ----
     document.querySelector('.logout-btn').addEventListener('click', async () => {
@@ -200,71 +280,6 @@
         }
         window.location.href = 'login.html';
     });
-    // ---- Load the real logged-in user's uploads ----
-async function loadMyUploads() {
-    const listEl = document.getElementById('uploadsList');
-    const countEl = document.getElementById('uploadsCount');
-
-    try {
-        const response = await fetch('my-uploads');
-        if (!response.ok) {
-            listEl.innerHTML = '<p class="status-error">Could not load your uploads.</p>';
-            return;
-        }
-        const notes = await response.json();
-
-        countEl.textContent = notes.length;
-
-        if (notes.length === 0) {
-            listEl.innerHTML = '<p class="status-empty">You haven\u2019t uploaded any notes yet.</p>';
-            return;
-        }
-
-        const statusClass = {
-            APPROVED: 'status-approved',
-            PENDING: 'status-pending',
-            REJECTED: 'status-rejected'
-        };
-        const statusLabel = {
-            APPROVED: 'Approved',
-            PENDING: 'Pending Review',
-            REJECTED: 'Rejected'
-        };
-        const typeLabel = {
-            NOTES: 'Notes',
-            SLIDES: 'Slides',
-            QUESTION_PAPER: 'Question Paper',
-            LAB_MANUAL: 'Lab Manual'
-        };
-
-        listEl.innerHTML = notes.map(n => `
-            <article class="resource-card">
-                <div class="resource-card-top">
-                    <span class="resource-type-tag">${typeLabel[n.noteType] || n.noteType}</span>
-                    <span class="status-badge ${statusClass[n.status] || ''}">${statusLabel[n.status] || n.status}</span>
-                </div>
-                <h3>${escapeHtml(n.title)}</h3>
-                <div class="resource-meta">
-                    <span>Semester ${n.semester}</span>
-                    <span>&bull;</span>
-                    <span>${escapeHtml(n.subjectName)}</span>
-                    <span>&bull;</span>
-                    <span>${n.downloadCount} downloads</span>
-                </div>
-            </article>
-        `).join('');
-
-    } catch (err) {
-        listEl.innerHTML = '<p class="status-error">Could not reach the server.</p>';
-    }
-}
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-loadMyUploads();
 
     // ---- Edit Profile: show/hide the form ----
     const editCard = document.getElementById('editProfileCard');
