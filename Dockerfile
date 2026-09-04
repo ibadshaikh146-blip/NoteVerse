@@ -3,6 +3,7 @@ WORKDIR /app
 COPY WEB-INF/src ./src
 COPY WEB-INF/lib ./lib
 COPY compile-only-lib ./compile-only-lib
+RUN rm -f src/com/noteverse/Main.java
 RUN mkdir -p classes && \
     javac -cp "lib/*:compile-only-lib/*" -d classes $(find src -name "*.java")
 
