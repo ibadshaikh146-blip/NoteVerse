@@ -98,4 +98,18 @@ public class JsonUtil {
         sb.append("]");
         return sb.toString();
     }
+    public static String subjectsToJson(List<Subject> subjects) {
+        ...
+        return sb.toString();
+    }
+
+    // Used by my-account.html's "My Uploads" tab — includes status
+    // (so the student can see Pending/Approved/Rejected) but not
+    // uploaderName, since it's always the current user.
+    public static String myUploadsToJson(List<Note> notes) {
+        ...
+        return sb.toString();
+    }
+
+}
 }

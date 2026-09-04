@@ -35,18 +35,10 @@
                 <h1>Ibad Shaikh</h1>
                 <p class="profile-roll">23BCA045 &bull; Semester 2</p>
 
-                <dl class="profile-stats">
+                                <dl class="profile-stats">
                     <div>
                         <dt>Uploads</dt>
-                        <dd>7</dd>
-                    </div>
-                    <div>
-                        <dt>Downloads</dt>
-                        <dd>142</dd>
-                    </div>
-                    <div>
-                        <dt>Avg. Rating</dt>
-                        <dd>4.6</dd>
+                        <dd id="uploadsCount">—</dd>
                     </div>
                 </dl>
 
@@ -110,50 +102,9 @@
                 </div>
 
                 <!-- ============ MY UPLOADS ============ -->
-                <div class="tab-panel" id="panel-uploads">
-                    <div class="resource-list">
-
-                        <article class="resource-card">
-                            <div class="resource-card-top">
-                                <span class="resource-type-tag">Notes</span>
-                                <span class="status-badge status-approved">Approved</span>
-                            </div>
-                            <h3><a href="note-detail.html">Data Structures — Unit 3: Trees &amp; Graphs</a></h3>
-                            <div class="resource-meta">
-                                <span>Semester 2</span>
-                                <span>&bull;</span>
-                                <span>142 downloads</span>
-                                <span>&bull;</span>
-                                <span>4.5&#9733;</span>
-                            </div>
-                        </article>
-
-                        <article class="resource-card">
-                            <div class="resource-card-top">
-                                <span class="resource-type-tag">Lab Manual</span>
-                                <span class="status-badge status-pending">Pending Review</span>
-                            </div>
-                            <h3>Advanced Web Technology — PHP Practicals</h3>
-                            <div class="resource-meta">
-                                <span>Semester 2</span>
-                                <span>&bull;</span>
-                                <span>Submitted 2 days ago</span>
-                            </div>
-                        </article>
-
-                        <article class="resource-card">
-                            <div class="resource-card-top">
-                                <span class="resource-type-tag">Question Paper</span>
-                                <span class="status-badge status-rejected">Rejected</span>
-                            </div>
-                            <h3>Discrete Mathematics — Old Exam Paper</h3>
-                            <div class="resource-meta">
-                                <span>Semester 2</span>
-                                <span>&bull;</span>
-                                <span>Reason: Low scan quality</span>
-                            </div>
-                        </article>
-
+                                <div class="tab-panel" id="panel-uploads">
+                    <div class="resource-list" id="uploadsList">
+                        <p class="status-loading">Loading your uploads…</p>
                     </div>
                 </div>
 
@@ -249,6 +200,71 @@
         }
         window.location.href = 'login.html';
     });
+    // ---- Load the real logged-in user's uploads ----
+async function loadMyUploads() {
+    const listEl = document.getElementById('uploadsList');
+    const countEl = document.getElementById('uploadsCount');
+
+    try {
+        const response = await fetch('my-uploads');
+        if (!response.ok) {
+            listEl.innerHTML = '<p class="status-error">Could not load your uploads.</p>';
+            return;
+        }
+        const notes = await response.json();
+
+        countEl.textContent = notes.length;
+
+        if (notes.length === 0) {
+            listEl.innerHTML = '<p class="status-empty">You haven\u2019t uploaded any notes yet.</p>';
+            return;
+        }
+
+        const statusClass = {
+            APPROVED: 'status-approved',
+            PENDING: 'status-pending',
+            REJECTED: 'status-rejected'
+        };
+        const statusLabel = {
+            APPROVED: 'Approved',
+            PENDING: 'Pending Review',
+            REJECTED: 'Rejected'
+        };
+        const typeLabel = {
+            NOTES: 'Notes',
+            SLIDES: 'Slides',
+            QUESTION_PAPER: 'Question Paper',
+            LAB_MANUAL: 'Lab Manual'
+        };
+
+        listEl.innerHTML = notes.map(n => `
+            <article class="resource-card">
+                <div class="resource-card-top">
+                    <span class="resource-type-tag">${typeLabel[n.noteType] || n.noteType}</span>
+                    <span class="status-badge ${statusClass[n.status] || ''}">${statusLabel[n.status] || n.status}</span>
+                </div>
+                <h3>${escapeHtml(n.title)}</h3>
+                <div class="resource-meta">
+                    <span>Semester ${n.semester}</span>
+                    <span>&bull;</span>
+                    <span>${escapeHtml(n.subjectName)}</span>
+                    <span>&bull;</span>
+                    <span>${n.downloadCount} downloads</span>
+                </div>
+            </article>
+        `).join('');
+
+    } catch (err) {
+        listEl.innerHTML = '<p class="status-error">Could not reach the server.</p>';
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+loadMyUploads();
 
     // ---- Edit Profile: show/hide the form ----
     const editCard = document.getElementById('editProfileCard');

@@ -1,8 +1,0 @@
-# NoteVerse Database Configuration
-# Copy this file to db.properties and fill in your actual credentials
-# db.properties is gitignored and should NEVER be committed
-
-db.driver=com.mysql.cj.jdbc.Driver
-db.url=jdbc:mysql://localhost:3306/noteverse?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-db.username=root
-db.password=your_password_here
