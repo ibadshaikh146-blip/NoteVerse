@@ -98,18 +98,27 @@ public class JsonUtil {
         sb.append("]");
         return sb.toString();
     }
-    public static String subjectsToJson(List<Subject> subjects) {
-        ...
-        return sb.toString();
-    }
 
     // Used by my-account.html's "My Uploads" tab — includes status
     // (so the student can see Pending/Approved/Rejected) but not
     // uploaderName, since it's always the current user.
     public static String myUploadsToJson(List<Note> notes) {
-        ...
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < notes.size(); i++) {
+            Note n = notes.get(i);
+            if (i > 0) sb.append(",");
+            sb.append("{")
+              .append("\"noteId\":").append(n.getNoteId()).append(",")
+              .append("\"title\":\"").append(escape(n.getTitle())).append("\",")
+              .append("\"subjectName\":\"").append(escape(n.getSubjectName())).append("\",")
+              .append("\"semester\":").append(n.getSemester()).append(",")
+              .append("\"noteType\":\"").append(escape(n.getNoteType())).append("\",")
+              .append("\"status\":\"").append(escape(n.getStatus())).append("\",")
+              .append("\"downloadCount\":").append(n.getDownloadCount()).append(",")
+              .append("\"uploadDate\":\"").append(n.getUploadDate() != null ? n.getUploadDate().toString() : "").append("\"")
+              .append("}");
+        }
+        sb.append("]");
         return sb.toString();
     }
-
-}
 }
