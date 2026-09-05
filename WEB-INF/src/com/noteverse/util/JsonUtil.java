@@ -121,4 +121,20 @@ public class JsonUtil {
         sb.append("]");
         return sb.toString();
     }
+
+    // Used by note-detail.html — a single note with uploader name
+    public static String noteDetailToJson(Note n) {
+        return "{"
+            + "\"noteId\":" + n.getNoteId() + ","
+            + "\"title\":\"" + escape(n.getTitle()) + "\","
+            + "\"description\":\"" + escape(n.getDescription()) + "\","
+            + "\"subjectName\":\"" + escape(n.getSubjectName()) + "\","
+            + "\"semester\":" + n.getSemester() + ","
+            + "\"noteType\":\"" + escape(n.getNoteType()) + "\","
+            + "\"filePath\":\"" + escape(n.getFilePath()) + "\","
+            + "\"uploaderName\":\"" + escape(n.getUploaderName()) + "\","
+            + "\"downloadCount\":" + n.getDownloadCount() + ","
+            + "\"uploadDate\":\"" + (n.getUploadDate() != null ? n.getUploadDate().toString() : "") + "\""
+            + "}";
+    }
 }

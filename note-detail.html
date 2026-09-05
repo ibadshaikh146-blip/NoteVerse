@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Structures — Unit 3: Trees &amp; Graphs | NoteVerse</title>
+    <title>Note Details | NoteVerse</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -36,105 +36,9 @@
             <div class="detail-layout">
 
                 <!-- ===================== MAIN DETAIL CARD ===================== -->
-                <article class="detail-card" data-code="BCA201">
-
-                    <div class="resource-card-top">
-                        <span class="resource-type-tag">Notes</span>
-                        <span class="resource-code">BCA201 &bull; Semester 2</span>
-                    </div>
-
-                    <h1>Data Structures — Unit 3: Trees &amp; Graphs</h1>
-
-                    <div class="resource-meta detail-meta">
-                        <span>Uploaded by Priya Mehta</span>
-                        <span>&bull;</span>
-                        <span>12 July 2026</span>
-                        <span>&bull;</span>
-                        <span>4.2 MB</span>
-                        <span>&bull;</span>
-                        <span>PDF, 28 pages</span>
-                    </div>
-
-                    <div class="resource-rating detail-rating" aria-label="Rated 4.5 out of 5">
-                        &#9733;&#9733;&#9733;&#9733;&#9734; <span>4.5 (32 ratings)</span>
-                    </div>
-
-                    <div class="detail-actions">
-                        <button type="button" class="btn-download">Download PDF</button>
-                        <button type="button" class="btn-bookmark" aria-label="Bookmark this note">&#9825;</button>
-                        <button type="button" class="btn-report" aria-label="Report this note">Report</button>
-                    </div>
-
-                    <hr class="detail-divider">
-
-                    <section class="detail-description">
-                        <h2>Description</h2>
-                        <p>
-                            Covers binary trees, traversal methods (inorder, preorder, postorder),
-                            AVL tree balancing, and an introduction to graph representation using
-                            adjacency lists and matrices. Includes solved examples and diagrams for
-                            each traversal method, matching GTU BCA Semester 2 syllabus, Unit 3.
-                        </p>
-                    </section>
-
-                    <section class="detail-comments">
-                        <h2>Comments (3)</h2>
-
-                        <div class="comment">
-                            <div class="comment-header">
-                                <span class="comment-author">Rohan Patel</span>
-                                <span class="comment-date">14 July 2026</span>
-                            </div>
-                            <p>Really clean diagrams for AVL rotations. Helped a lot before my exam.</p>
-                        </div>
-
-                        <div class="comment">
-                            <div class="comment-header">
-                                <span class="comment-author">Aisha Khan</span>
-                                <span class="comment-date">15 July 2026</span>
-                            </div>
-                            <p>Would've liked a couple more solved graph traversal examples, but solid overall.</p>
-                        </div>
-
-                        <div class="comment">
-                            <div class="comment-header">
-                                <span class="comment-author">Devansh Joshi</span>
-                                <span class="comment-date">18 July 2026</span>
-                            </div>
-                            <p>Exactly matched what was asked in the unit test. Thanks for uploading!</p>
-                        </div>
-
-                        <form action="#" method="post" class="comment-form" novalidate>
-                            <label for="newComment">Add a comment</label>
-                            <textarea id="newComment" name="newComment" rows="3" placeholder="Share feedback on this note..." required></textarea>
-                            <button type="submit" class="auth-submit comment-submit">Post Comment</button>
-                        </form>
-                    </section>
-
+                <article class="detail-card" id="detailCard">
+                    <p class="explorer-status" id="loadingStatus">Loading note…</p>
                 </article>
-
-                <!-- ===================== RELATED NOTES SIDEBAR ===================== -->
-                <aside class="related-sidebar">
-                    <h2>More from Semester 2</h2>
-
-                    <a href="note-detail.html" class="related-item">
-                        <span class="related-tag">Lab Manual</span>
-                        <span class="related-title">DBMS — MySQL Lab Manual</span>
-                        <span class="related-meta">4.8&#9733; &bull; 6.8 MB</span>
-                    </a>
-
-                    <a href="note-detail.html" class="related-item">
-                        <span class="related-tag">Notes</span>
-                        <span class="related-title">Data Structures — Unit 2: Linked Lists</span>
-                        <span class="related-meta">4.3&#9733; &bull; 3.1 MB</span>
-                    </a>
-
-                    <a href="note-detail.html" class="related-item">
-                        <span class="related-tag">Slides</span>
-                        <span class="related-title">Discrete Mathematics — Relations</span>
-                        <span class="related-meta">4.1&#9733; &bull; 2.4 MB</span>
-                    </a>
-                </aside>
 
             </div>
         </div>
@@ -144,14 +48,133 @@
     <footer>
         <p>&copy; 2026 NoteVerse. Built for BCA students, by a BCA student.</p>
     </footer>
+
     <script>
-        // Phase 3 JS: same bookmark toggle behavior as Notes Explorer.
-        document.querySelectorAll('.btn-bookmark').forEach(btn => {
-            btn.addEventListener('click', () => {
-                btn.classList.toggle('bookmarked');
-                btn.innerHTML = btn.classList.contains('bookmarked') ? '&#9829;' : '&#9825;';
+        const TYPE_LABELS = {
+            NOTES: 'Notes',
+            SLIDES: 'Slides',
+            QUESTION_PAPER: 'Question Paper',
+            LAB_MANUAL: 'Lab Manual'
+        };
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function formatUploadDate(isoDate) {
+            if (!isoDate) return 'Recently uploaded';
+            const date = new Date(isoDate);
+            if (Number.isNaN(date.getTime())) return 'Recently uploaded';
+            return date.toLocaleDateString('en-IN', {
+                day: 'numeric', month: 'short', year: 'numeric'
             });
-        });
+        }
+
+        async function loadNote() {
+            const params = new URLSearchParams(window.location.search);
+            const noteId = params.get('id');
+            const card = document.getElementById('detailCard');
+
+            if (!noteId) {
+                card.innerHTML = '<p class="explorer-status">No note specified.</p>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`note-detail?id=${encodeURIComponent(noteId)}`);
+                if (!response.ok) {
+                    card.innerHTML = '<p class="explorer-status">This note could not be found, or is no longer available.</p>';
+                    return;
+                }
+                const note = await response.json();
+                renderNote(note);
+            } catch (err) {
+                card.innerHTML = '<p class="explorer-status">Could not load this note. Please try again.</p>';
+            }
+        }
+
+        function renderNote(note) {
+            const card = document.getElementById('detailCard');
+            const typeLabel = TYPE_LABELS[note.noteType] || note.noteType;
+            const downloadUrl = `download?id=${note.noteId}`;
+
+            card.innerHTML = `
+                <div class="resource-card-top">
+                    <span class="resource-type-tag">${escapeHtml(typeLabel)}</span>
+                    <span class="resource-code">${escapeHtml(note.subjectName)} &bull; Semester ${note.semester}</span>
+                </div>
+
+                <h1>${escapeHtml(note.title)}</h1>
+
+                <div class="resource-meta detail-meta">
+                    <span>Uploaded by ${escapeHtml(note.uploaderName)}</span>
+                    <span>&bull;</span>
+                    <span>${escapeHtml(formatUploadDate(note.uploadDate))}</span>
+                    <span>&bull;</span>
+                    <span>${note.downloadCount} download${note.downloadCount === 1 ? '' : 's'}</span>
+                </div>
+
+                <div class="detail-actions">
+                    <a href="${downloadUrl}" class="btn-download">Download PDF</a>
+                    <button type="button" class="btn-bookmark" data-note-id="${note.noteId}" aria-label="Bookmark this note">&#9825;</button>
+                </div>
+
+                <hr class="detail-divider">
+
+                <section class="detail-description">
+                    <h2>Description</h2>
+                    <p>${escapeHtml(note.description) || 'No description provided.'}</p>
+                </section>
+            `;
+
+            wireBookmarkButton();
+        }
+
+        function wireBookmarkButton() {
+            const btn = document.querySelector('.btn-bookmark');
+            if (!btn) return;
+
+            // Check current bookmark state
+            fetch('bookmarks').then(async (res) => {
+                if (!res.ok) return; // not logged in
+                const bookmarked = await res.json();
+                const noteId = Number(btn.dataset.noteId);
+                if (bookmarked.some(n => n.noteId === noteId)) {
+                    btn.classList.add('bookmarked');
+                    btn.innerHTML = '&#9829;';
+                }
+            }).catch(() => {});
+
+            btn.addEventListener('click', async () => {
+                btn.disabled = true;
+                try {
+                    const response = await fetch('bookmarks', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ noteId: Number(btn.dataset.noteId) })
+                    });
+                    if (response.status === 401) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    const result = await response.json();
+                    if (result.success) {
+                        btn.classList.toggle('bookmarked', result.bookmarked);
+                        btn.innerHTML = result.bookmarked ? '&#9829;' : '&#9825;';
+                    }
+                } catch (err) {
+                    // leave as-is
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+        }
+
+        loadNote();
     </script>
 
 </body>

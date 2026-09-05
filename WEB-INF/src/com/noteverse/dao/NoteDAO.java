@@ -137,6 +137,31 @@ public class NoteDAO {
         return null;
     }
 
+    // Used by note-detail.html — a single APPROVED note, with the
+    // uploader's name joined in for display.
+    public Note getNoteDetailById(int noteId) {
+        String sql = "SELECT n.*, s.subject_name, u.full_name AS uploader_name FROM notes n " +
+                     "JOIN subjects s ON n.subject_id = s.subject_id " +
+                     "JOIN users u ON n.uploader_id = u.user_id " +
+                     "WHERE n.note_id = ? AND n.status = 'APPROVED'";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, noteId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Note note = mapRowToNote(rs);
+                    note.setUploaderName(rs.getString("uploader_name"));
+                    return note;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public boolean addNote(Note note) {
         String sql = "INSERT INTO notes (title, description, subject_id, semester, note_type, status, file_path, uploader_id) " +
                      "VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?)";
