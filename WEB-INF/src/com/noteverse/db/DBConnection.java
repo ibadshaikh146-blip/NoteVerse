@@ -11,13 +11,17 @@ import java.util.Properties;
  * Central JDBC connection handler for NoteVerse.
  *
  * Connection details are resolved in this order:
- *   1. Railway/production environment variables (MYSQLHOST, MYSQLPORT,
- *      MYSQLDATABASE, MYSQLUSER, MYSQLPASSWORD) — set automatically when
- *      you attach a MySQL plugin on Railway.
- *   2. Local db.properties file (for development in VS Code / local Tomcat).
+ *   1. A full JDBC_URL + DB_USER + DB_PASSWORD — the most portable option,
+ *      works with any provider (Aiven, Render, PlanetScale, etc). Set
+ *      JDBC_URL to something like:
+ *      jdbc:mysql://host:port/dbname?sslMode=REQUIRED&serverTimezone=UTC
+ *   2. Railway-style discrete environment variables (MYSQLHOST, MYSQLPORT,
+ *      MYSQLDATABASE, MYSQLUSER, MYSQLPASSWORD) — kept for backward
+ *      compatibility with a Railway deployment.
+ *   3. Local db.properties file (for development in VS Code / local Tomcat).
  *
- * This means the exact same code runs locally and on Railway with zero
- * changes — nothing is hardcoded.
+ * This means the exact same code runs locally and on any cloud provider
+ * with zero code changes — only environment variables differ.
  */
 public class DBConnection {
 
@@ -31,8 +35,6 @@ public class DBConnection {
         props = new Properties();
         try (InputStream input = DBConnection.class.getClassLoader().getResourceAsStream(CONFIG_FILE)) {
             if (input == null) {
-                // Not fatal here — we might be running on Railway where
-                // env vars are used instead of a properties file.
                 return props;
             }
             props.load(input);
@@ -51,31 +53,42 @@ public class DBConnection {
         String user;
         String password;
 
-        // 1. Try Railway-style environment variables first
-        String envHost = System.getenv("MYSQLHOST");
-        String envPort = System.getenv("MYSQLPORT");
-        String envDb   = System.getenv("MYSQLDATABASE");
-        String envUser = System.getenv("MYSQLUSER");
-        String envPass = System.getenv("MYSQLPASSWORD");
+        // 1. Full JDBC URL — most portable, works with any provider
+        String jdbcUrl = System.getenv("JDBC_URL");
+        String dbUser = System.getenv("DB_USER");
+        String dbPassword = System.getenv("DB_PASSWORD");
 
-        if (envHost != null && envUser != null && envPass != null && envDb != null) {
-            String port = (envPort != null) ? envPort : "3306";
-            url = "jdbc:mysql://" + envHost + ":" + port + "/" + envDb
-                    + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
-            user = envUser;
-            password = envPass;
+        if (jdbcUrl != null && dbUser != null && dbPassword != null) {
+            url = jdbcUrl;
+            user = dbUser;
+            password = dbPassword;
         } else {
-            // 2. Fall back to local db.properties
-            Properties p = loadProperties();
-            url = p.getProperty("db.url");
-            user = p.getProperty("db.username", p.getProperty("db.user"));
-            password = p.getProperty("db.password");
+            // 2. Railway-style discrete environment variables
+            String envHost = System.getenv("MYSQLHOST");
+            String envPort = System.getenv("MYSQLPORT");
+            String envDb   = System.getenv("MYSQLDATABASE");
+            String envUser = System.getenv("MYSQLUSER");
+            String envPass = System.getenv("MYSQLPASSWORD");
 
-            if (url == null || user == null || password == null) {
-                throw new RuntimeException(
-                    "No database config found. Either set MYSQLHOST/MYSQLUSER/MYSQLPASSWORD/MYSQLDATABASE " +
-                    "environment variables, or provide " + CONFIG_FILE +
-                    " with db.url, db.username, and db.password.");
+            if (envHost != null && envUser != null && envPass != null && envDb != null) {
+                String port = (envPort != null) ? envPort : "3306";
+                url = "jdbc:mysql://" + envHost + ":" + port + "/" + envDb
+                        + "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+                user = envUser;
+                password = envPass;
+            } else {
+                // 3. Fall back to local db.properties
+                Properties p = loadProperties();
+                url = p.getProperty("db.url");
+                user = p.getProperty("db.username", p.getProperty("db.user"));
+                password = p.getProperty("db.password");
+
+                if (url == null || user == null || password == null) {
+                    throw new RuntimeException(
+                        "No database config found. Set JDBC_URL/DB_USER/DB_PASSWORD, " +
+                        "or MYSQLHOST/MYSQLUSER/MYSQLPASSWORD/MYSQLDATABASE, " +
+                        "or provide " + CONFIG_FILE + " locally.");
+                }
             }
         }
 
@@ -90,7 +103,7 @@ public class DBConnection {
 
     // Quick manual test: run this file directly to check your connection works
     public static void main(String[] args) {
-        try (Connection conn = DBConnection.getConnection()) {
+        try (Connection conn = getConnection()) {
             if (conn != null && !conn.isClosed()) {
                 System.out.println("Connected to NoteVerse database successfully!");
             }
