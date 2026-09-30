@@ -16,7 +16,6 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
 @WebServlet("/upload")
 @MultipartConfig(
@@ -77,13 +76,10 @@ public class NoteUploadServlet extends HttpServlet {
 
             String withoutScheme = cloudinaryEnv.substring("cloudinary://".length());
             String[] parts = withoutScheme.split("@");
-            String[] credentials = parts[0].split(":");
-            String apiKey = credentials[0];
-            String apiSecret = credentials[1];
             String cloudName = parts[1];
 
             // Upload to Cloudinary REST API
-            fileUrl = uploadToCloudinary(filePart, cloudName, apiKey, apiSecret);
+            fileUrl = uploadToCloudinary(filePart, cloudName);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -110,7 +106,7 @@ public class NoteUploadServlet extends HttpServlet {
         }
     }
 
-    private String uploadToCloudinary(Part filePart, String cloudName, String apiKey, String apiSecret) throws IOException {
+    private String uploadToCloudinary(Part filePart, String cloudName) throws IOException {
         String boundary = "===" + System.currentTimeMillis() + "===";
         URL url = new URL("https://api.cloudinary.com/v1_1/" + cloudName + "/auto/upload");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -120,13 +116,11 @@ public class NoteUploadServlet extends HttpServlet {
         conn.setDoInput(true);
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
-
-        String authString = apiKey + ":" + apiSecret;
-        String encodedAuth = Base64.getEncoder().encodeToString(authString.getBytes(StandardCharsets.UTF_8));
-        conn.setRequestProperty("Authorization", "Basic " + encodedAuth);
+        
+        // Authorization header is intentionally omitted because unsigned upload presets do not require Basic Auth.
 
         try (OutputStream outputStream = conn.getOutputStream()) {
-            // 1. Write the upload_preset field (Required for Cloudinary unsigned REST API uploads)
+            // 1. Write the upload_preset field (Required for unsigned REST API uploads)
             String presetField = "--" + boundary + "\r\n" +
                     "Content-Disposition: form-data; name=\"upload_preset\"\r\n\r\n" +
                     "YOUR_UPLOAD_PRESET_NAME\r\n"; // <-- REPLACE WITH YOUR CLOUDINARY PRESET NAME
