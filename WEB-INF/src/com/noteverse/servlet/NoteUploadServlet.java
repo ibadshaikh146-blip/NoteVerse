@@ -81,7 +81,7 @@ public class NoteUploadServlet extends HttpServlet {
             String apiSecret = credentials[1];
             String cloudName = parts[1];
 
-            // Uploads to Cloudinary raw endpoint using Basic Auth
+            // Uploads to Cloudinary auto endpoint using Basic Auth with public access mode
             fileUrl = uploadToCloudinaryBasicAuth(filePart, cloudName, apiKey, apiSecret);
 
         } catch (Exception e) {
@@ -110,8 +110,8 @@ public class NoteUploadServlet extends HttpServlet {
 
     private String uploadToCloudinaryBasicAuth(Part filePart, String cloudName, String apiKey, String apiSecret) throws IOException {
         String boundary = "===" + System.currentTimeMillis() + "===";
-        // Using raw/upload endpoint for PDFs to bypass image transformations and restrictions
-        URL url = new URL("https://api.cloudinary.com/v1_1/" + cloudName + "/raw/upload");
+        // Using auto/upload endpoint so Cloudinary handles PDFs correctly as viewable documents
+        URL url = new URL("https://api.cloudinary.com/v1_1/" + cloudName.trim() + "/auto/upload");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
         conn.setUseCaches(false);
@@ -120,12 +120,15 @@ public class NoteUploadServlet extends HttpServlet {
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
 
-        String authString = apiKey + ":" + apiSecret;
+        String cleanApiKey = apiKey.replace("\"", "").trim();
+        String cleanApiSecret = apiSecret.replace("\"", "").trim();
+
+        String authString = cleanApiKey + ":" + cleanApiSecret;
         String encodedAuth = Base64.getEncoder().encodeToString(authString.getBytes(StandardCharsets.UTF_8));
         conn.setRequestProperty("Authorization", "Basic " + encodedAuth);
 
         try (OutputStream outputStream = conn.getOutputStream()) {
-            // Force raw file to be publicly accessible to prevent 401 ACL errors
+            // Explicitly force public accessibility to prevent 401 ACL delivery errors
             writeFormField(outputStream, boundary, "access_mode", "public");
 
             String fileHeader = "--" + boundary + "\r\n" +
