@@ -16,7 +16,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
+import java.util.Base64;
 
 @WebServlet("/upload")
 @MultipartConfig(
@@ -81,7 +81,8 @@ public class NoteUploadServlet extends HttpServlet {
             String apiSecret = credentials[1];
             String cloudName = parts[1];
 
-            fileUrl = uploadToCloudinarySigned(filePart, cloudName, apiKey, apiSecret);
+            // Uses official Cloudinary Basic Authentication (no signature or preset required)
+            fileUrl = uploadToCloudinaryBasicAuth(filePart, cloudName, apiKey, apiSecret);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -107,12 +108,7 @@ public class NoteUploadServlet extends HttpServlet {
         }
     }
 
-    private String uploadToCloudinarySigned(Part filePart, String cloudName, String apiKey, String apiSecret) throws Exception {
-        String timestamp = String.valueOf(System.currentTimeMillis() / 1000L);
-        
-        String stringToSign = "timestamp=" + timestamp + apiSecret;
-        String signature = sha1(stringToSign);
-
+    private String uploadToCloudinaryBasicAuth(Part filePart, String cloudName, String apiKey, String apiSecret) throws IOException {
         String boundary = "===" + System.currentTimeMillis() + "===";
         URL url = new URL("https://api.cloudinary.com/v1_1/" + cloudName + "/auto/upload");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -123,11 +119,12 @@ public class NoteUploadServlet extends HttpServlet {
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
 
-        try (OutputStream outputStream = conn.getOutputStream()) {
-            writeFormField(outputStream, boundary, "api_key", apiKey);
-            writeFormField(outputStream, boundary, "timestamp", timestamp);
-            writeFormField(outputStream, boundary, "signature", signature);
+        // Authenticate request using HTTP Basic Auth with API Key and API Secret
+        String authString = apiKey + ":" + apiSecret;
+        String encodedAuth = Base64.getEncoder().encodeToString(authString.getBytes(StandardCharsets.UTF_8));
+        conn.setRequestProperty("Authorization", "Basic " + encodedAuth);
 
+        try (OutputStream outputStream = conn.getOutputStream()) {
             String fileHeader = "--" + boundary + "\r\n" +
                     "Content-Disposition: form-data; name=\"file\"; filename=\"" + filePart.getSubmittedFileName() + "\"\r\n" +
                     "Content-Type: application/pdf\r\n\r\n";
@@ -176,23 +173,6 @@ public class NoteUploadServlet extends HttpServlet {
                 throw new IOException("Could not parse secure_url from Cloudinary response.");
             }
         }
-    }
-
-    private void writeFormField(OutputStream out, String boundary, String name, String value) throws IOException {
-        String field = "--" + boundary + "\r\n" +
-                "Content-Disposition: form-data; name=\"" + name + "\"\r\n\r\n" +
-                value + "\r\n";
-        out.write(field.getBytes(StandardCharsets.UTF_8));
-    }
-
-    private String sha1(String input) throws Exception {
-        MessageDigest mDigest = MessageDigest.getInstance("SHA-1");
-        byte[] result = mDigest.digest(input.getBytes(StandardCharsets.UTF_8));
-        StringBuilder sb = new StringBuilder();
-        for (byte b : result) {
-            sb.append(Integer.toString((b & 0xff) + 0x100, 16).substring(1));
-        }
-        return sb.toString();
     }
 
     private void respond(HttpServletResponse response, int statusCode, boolean success, String message)
