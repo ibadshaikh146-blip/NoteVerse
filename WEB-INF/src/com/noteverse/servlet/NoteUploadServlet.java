@@ -82,7 +82,7 @@ public class NoteUploadServlet extends HttpServlet {
             String apiSecret = credentials[1];
             String cloudName = parts[1];
 
-            // Upload to Cloudinary REST API using basic authentication
+            // Upload to Cloudinary REST API
             fileUrl = uploadToCloudinary(filePart, cloudName, apiKey, apiSecret);
 
         } catch (Exception e) {
@@ -126,13 +126,19 @@ public class NoteUploadServlet extends HttpServlet {
         conn.setRequestProperty("Authorization", "Basic " + encodedAuth);
 
         try (OutputStream outputStream = conn.getOutputStream()) {
-            // Write multipart header safely using bytes
+            // 1. Write the upload_preset field (Required for Cloudinary unsigned REST API uploads)
+            String presetField = "--" + boundary + "\r\n" +
+                    "Content-Disposition: form-data; name=\"upload_preset\"\r\n\r\n" +
+                    "YOUR_UPLOAD_PRESET_NAME\r\n"; // <-- REPLACE WITH YOUR CLOUDINARY PRESET NAME
+            outputStream.write(presetField.getBytes(StandardCharsets.UTF_8));
+
+            // 2. Write file multipart header
             String header = "--" + boundary + "\r\n" +
                     "Content-Disposition: form-data; name=\"file\"; filename=\"" + filePart.getSubmittedFileName() + "\"\r\n" +
                     "Content-Type: application/pdf\r\n\r\n";
             outputStream.write(header.getBytes(StandardCharsets.UTF_8));
 
-            // Write file stream bytes directly
+            // 3. Write file stream bytes directly
             try (InputStream inputStream = filePart.getInputStream()) {
                 byte[] buffer = new byte[4096];
                 int bytesRead;
@@ -141,7 +147,7 @@ public class NoteUploadServlet extends HttpServlet {
                 }
             }
 
-            // Write closing boundary
+            // 4. Write closing boundary
             String footer = "\r\n--" + boundary + "--\r\n";
             outputStream.write(footer.getBytes(StandardCharsets.UTF_8));
             outputStream.flush();
