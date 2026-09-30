@@ -81,7 +81,7 @@ public class NoteUploadServlet extends HttpServlet {
             String apiSecret = credentials[1];
             String cloudName = parts[1];
 
-            // Uses official Cloudinary Basic Authentication (no signature or preset required)
+            // Uploads to Cloudinary raw endpoint using Basic Auth
             fileUrl = uploadToCloudinaryBasicAuth(filePart, cloudName, apiKey, apiSecret);
 
         } catch (Exception e) {
@@ -110,6 +110,7 @@ public class NoteUploadServlet extends HttpServlet {
 
     private String uploadToCloudinaryBasicAuth(Part filePart, String cloudName, String apiKey, String apiSecret) throws IOException {
         String boundary = "===" + System.currentTimeMillis() + "===";
+        // Using raw/upload endpoint for PDFs to bypass image transformations and restrictions
         URL url = new URL("https://api.cloudinary.com/v1_1/" + cloudName + "/raw/upload");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
@@ -119,12 +120,14 @@ public class NoteUploadServlet extends HttpServlet {
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
 
-        // Authenticate request using HTTP Basic Auth with API Key and API Secret
         String authString = apiKey + ":" + apiSecret;
         String encodedAuth = Base64.getEncoder().encodeToString(authString.getBytes(StandardCharsets.UTF_8));
         conn.setRequestProperty("Authorization", "Basic " + encodedAuth);
 
         try (OutputStream outputStream = conn.getOutputStream()) {
+            // Force raw file to be publicly accessible to prevent 401 ACL errors
+            writeFormField(outputStream, boundary, "access_mode", "public");
+
             String fileHeader = "--" + boundary + "\r\n" +
                     "Content-Disposition: form-data; name=\"file\"; filename=\"" + filePart.getSubmittedFileName() + "\"\r\n" +
                     "Content-Type: application/pdf\r\n\r\n";
@@ -173,6 +176,13 @@ public class NoteUploadServlet extends HttpServlet {
                 throw new IOException("Could not parse secure_url from Cloudinary response.");
             }
         }
+    }
+
+    private void writeFormField(OutputStream out, String boundary, String name, String value) throws IOException {
+        String field = "--" + boundary + "\r\n" +
+                "Content-Disposition: form-data; name=\"" + name + "\"\r\n\r\n" +
+                value + "\r\n";
+        out.write(field.getBytes(StandardCharsets.UTF_8));
     }
 
     private void respond(HttpServletResponse response, int statusCode, boolean success, String message)
