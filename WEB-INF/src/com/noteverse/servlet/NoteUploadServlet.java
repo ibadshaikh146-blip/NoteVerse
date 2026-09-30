@@ -110,7 +110,7 @@ public class NoteUploadServlet extends HttpServlet {
 
     private String uploadToCloudinaryBasicAuth(Part filePart, String cloudName, String apiKey, String apiSecret) throws IOException {
         String boundary = "===" + System.currentTimeMillis() + "===";
-        URL url = new URL("https://api.cloudinary.com/v1_1/" + cloudName + "/auto/upload");
+        URL url = new URL("https://api.cloudinary.com/v1_1/" + cloudName + "/raw/upload");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
         conn.setUseCaches(false);
