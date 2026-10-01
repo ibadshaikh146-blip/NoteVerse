@@ -1,202 +1,251 @@
-    <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel | NoteVerse</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <title>NoteVerse - Admin Control Center</title>
+    <!-- Tailwind CSS for rapid styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-gray-900 text-gray-100 min-h-screen">
 
-    <!-- ===================== HEADER / NAVIGATION ===================== -->
-    <header>
-        <nav>
-            <div class="logo">
-                <a href="index.html">NoteVerse</a>
+    <!-- Navbar -->
+    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <span class="text-xl font-bold tracking-wider text-indigo-400">NoteVerse ADMIN</span>
+        </div>
+        <a href="index.jsp" class="text-sm bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition">Back to Site</a>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        
+        <h1 class="text-3xl font-extrabold mb-6 text-white">Platform Moderation Dashboard</h1>
+
+        <!-- Pending Notes Section -->
+        <div class="bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700">
+            <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-indigo-300">Pending Notes Queue</h2>
+                <button onclick="loadPendingNotes()" class="text-xs bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded transition">Refresh</button>
             </div>
 
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="notes-explorer.html">Browse BCA Notes</a></li>
-                <li><a href="upload.html">Upload</a></li>
-                <li><a href="my-account.html">My Account</a></li>
-            </ul>
-        </nav>
-    </header>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-700/50 text-gray-400 text-xs uppercase tracking-wider">
+                            <th class="px-6 py-3">Title / Details</th>
+                            <th class="px-6 py-3">Semester</th>
+                            <th class="px-6 py-3">Type</th>
+                            <th class="px-6 py-3 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingTableBody" class="divide-y divide-gray-700">
+                        <!-- Student Directory / User Management Section -->
+<div class="bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700 mt-8">
+    <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+        <h2 class="text-xl font-semibold text-indigo-300">Registered Students Directory</h2>
+        <button onclick="loadUsers()" class="text-xs bg-indigo-600 hover:bg-indigo-500 px-3 py-1.5 rounded transition">Refresh Users</button>
+    </div>
 
-    <main>
-        <section class="explorer-header">
-            <h1>Admin Panel — Pending Uploads</h1>
-            <p id="resultSummary">Loading pending uploads…</p>
-        </section>
-
-        <section style="max-width: 900px; margin: 0 auto; padding: 0 1.5rem;">
-            <div class="resource-list" id="pendingList">
-                <p class="explorer-status" id="loadingStatus">Loading…</p>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-700/50 text-gray-400 text-xs uppercase tracking-wider">
+                    <th class="px-6 py-3">Full Name</th>
+                    <th class="px-6 py-3">Email</th>
+                    <th class="px-6 py-3">Role</th>
+                    <th class="px-6 py-3 text-center">Manage Role / Actions</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody" class="divide-y divide-gray-700">
+                <tr>
+                    <td colspan="4" class="px-6 py-6 text-center text-gray-500">Loading users...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+                        <!-- Dynamic rows injected via JavaScript -->
+                        <tr>
+                            <td colspan="4" class="px-6 py-6 text-center text-gray-500">Loading pending notes...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-        </section>
-    </main>
+        </div>
+    </div>
 
-    <!-- ===================== FOOTER ===================== -->
-    <footer>
-        <p>&copy; 2026 NoteVerse. Built for BCA students, by a BCA student.</p>
-    </footer>
+    <!-- PDF Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-gray-800 rounded-xl w-full max-w-4xl h-[80vh] flex flex-col border border-gray-700 overflow-hidden">
+            <div class="px-6 py-4 bg-gray-700 flex justify-between items-center">
+                <h3 class="font-semibold text-lg text-white">PDF Preview</h3>
+                <button onclick="closePreview()" class="text-gray-400 hover:text-white font-bold text-xl">&times;</button>
+            </div>
+            <div class="flex-1 bg-gray-900 p-2">
+                <iframe id="pdfViewerFrame" class="w-full h-full rounded border-0"></iframe>
+            </div>
+        </div>
+    </div>
 
+    <!-- JavaScript Logic -->
     <script>
-        const pendingList = document.getElementById('pendingList');
-        const resultSummary = document.getElementById('resultSummary');
+        document.addEventListener("DOMContentLoaded", () => {
+            loadPendingNotes();
+        });
 
-        const TYPE_LABELS = {
-            NOTES: 'Notes',
-            SLIDES: 'Slides',
-            QUESTION_PAPER: 'Question Paper',
-            LAB_MANUAL: 'Lab Manual'
-        };
+        function loadPendingNotes() {
+            fetch('admin/pending-notes')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('pendingTableBody');
+                    tbody.innerHTML = '';
 
-        function escapeHtml(value) {
-            return String(value ?? '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;');
+                    if (data.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-6 text-center text-gray-400">No pending notes waiting for approval. Great job!</td></tr>`;
+                        return;
+                    }
+
+                    data.forEach(note => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-gray-700/30 transition";
+                        tr.innerHTML = `
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-white">\${note.title}</div>
+                                <div class="text-sm text-gray-400">\${note.description || 'No description provided.'}</div>
+                            </td>
+                            <td class="px-6 py-4 text-gray-300">Sem \${note.semester}</td>
+                            <td class="px-6 py-4">
+                                <span class="bg-indigo-900/50 text-indigo-300 border border-indigo-700 text-xs px-2.5 py-1 rounded-full">\${note.noteType}</span>
+                            </td>
+                            <td class="px-6 py-4 text-center space-x-2">
+                                <button onclick="previewPdf('\${note.filePath}')" class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded transition">Preview</button>
+                                <button onclick="moderateNote(\${note.noteId}, 'APPROVE')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs px-3 py-1.5 rounded transition">Approve</button>
+                                <button onclick="moderateNote(\${note.noteId}, 'DELETE')" class="bg-rose-600 hover:bg-rose-500 text-white text-xs px-3 py-1.5 rounded transition">Delete</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                })
+                .catch(err => {
+                    console.error('Error fetching pending notes:', err);
+                    document.getElementById('pendingTableBody').innerHTML = `<tr><td colspan="4" class="px-6 py-6 text-center text-rose-400">Failed to load pending notes.</td></tr>`;
+                });
         }
 
-        function formatDate(isoDate) {
-            if (!isoDate) return '';
-            const date = new Date(isoDate);
-            if (Number.isNaN(date.getTime())) return '';
-            return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-        }
+        function moderateNote(noteId, action) {
+            if (!confirm(`Are you sure you want to \${action.toLowerCase()} this note?`)) return;
 
-        // ---- Admin access check: must be logged in AND role === 'ADMIN' ----
-        async function checkAdminAccess() {
-            try {
-                const response = await fetch('me');
-                const data = await response.json();
+            const formData = new URLSearchParams();
+            formData.append('noteId', noteId);
+            formData.append('action', action);
 
-                if (!data.loggedIn) {
-                    window.location.href = 'login.html';
-                    return false;
+            fetch('admin/moderate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString()
+            })
+            .then(res => res.json())
+            .then(result => {
+                if (result.success) {
+                    loadPendingNotes(); // Refresh list
+                } else {
+                    alert('Action failed: ' + result.message);
                 }
-                if (data.role !== 'ADMIN') {
-                    // Not an admin — quietly send them home rather than
-                    // showing an empty/broken admin page.
-                    window.location.href = 'index.html';
-                    return false;
-                }
-                return true;
-            } catch (err) {
-                window.location.href = 'login.html';
-                return false;
-            }
+            })
+            .catch(err => alert('Network error occurred.'));
         }
 
-        function renderPending(notes) {
-            if (!notes.length) {
-                pendingList.innerHTML = '<p class="explorer-status">Nothing pending review right now.</p>';
-                resultSummary.textContent = 'All caught up — no pending uploads.';
+        function previewPdf(filePath) {
+            const modal = document.getElementById('previewModal');
+            const frame = document.getElementById('pdfViewerFrame');
+            frame.src = filePath; // Points directly to the local server storage path
+            modal.classList.remove('hidden');
+        }
+
+        function closePreview() {
+            const modal = document.getElementById('previewModal');
+            const frame = document.getElementById('pdfViewerFrame');
+            frame.src = '';
+            modal.classList.add('hidden');
+        }
+        // Load users on page startup
+document.addEventListener("DOMContentLoaded", () => {
+    loadPendingNotes();
+    loadUsers();
+});
+
+function loadUsers() {
+    fetch('admin/users')
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-6 text-center text-gray-400">No registered users found.</td></tr>`;
                 return;
             }
 
-            resultSummary.textContent = `${notes.length} upload(s) awaiting review.`;
-
-            pendingList.innerHTML = notes.map(note => `
-                <article class="resource-card" data-note-id="${note.noteId}">
-                    <div class="resource-card-top">
-                        <span class="resource-type-tag">${escapeHtml(TYPE_LABELS[note.noteType] || note.noteType)}</span>
-                        <span class="status-badge status-pending">Pending</span>
-                    </div>
-
-                    <h3>${escapeHtml(note.title)}</h3>
-
-                    <div class="resource-meta">
-                        <span>${escapeHtml(note.subjectName)}</span>
-                        <span>&bull;</span>
-                        <span>Semester ${note.semester}</span>
-                        <span>&bull;</span>
-                        <span>By ${escapeHtml(note.uploaderName)}</span>
-                        <span>&bull;</span>
-                        <span>${escapeHtml(formatDate(note.uploadDate))}</span>
-                    </div>
-
-                    ${note.description ? `<p style="margin: 0.75rem 0; color: #555;">${escapeHtml(note.description)}</p>` : ''}
-
-                    <div class="resource-actions">
-                        <a href="${escapeHtml(note.filePath)}" target="_blank" class="btn-download">View PDF</a>
-                        <button type="button" class="auth-submit approve-btn" style="width:auto; padding: 0.5rem 1.25rem;">Approve</button>
-                        <button type="button" class="filter-clear reject-btn" style="width:auto; padding: 0.5rem 1.25rem;">Reject</button>
-                    </div>
-
-                    <p class="form-status" style="margin-top: 0.5rem;"></p>
-                </article>
-            `).join('');
-
-            pendingList.querySelectorAll('.approve-btn').forEach(btn => {
-                btn.addEventListener('click', () => moderateNote(btn, 'APPROVE'));
+            data.forEach(user => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-700/30 transition";
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-bold text-white">\${user.fullName}</td>
+                    <td class="px-6 py-4 text-gray-300">\${user.email}</td>
+                    <td class="px-6 py-4">
+                        <span class="bg-gray-700 text-indigo-300 text-xs px-2.5 py-1 rounded-full">\${user.role}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center space-x-2">
+                        <button onclick="toggleRole(\${user.userId}, '\${user.role}')" class="bg-amber-600 hover:bg-amber-500 text-white text-xs px-3 py-1.5 rounded transition">Toggle Role</button>
+                        <button onclick="deleteUser(\${user.userId})" class="bg-rose-600 hover:bg-rose-500 text-white text-xs px-3 py-1.5 rounded transition">Remove</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
             });
-            pendingList.querySelectorAll('.reject-btn').forEach(btn => {
-                btn.addEventListener('click', () => moderateNote(btn, 'REJECT'));
-            });
-        }
+        })
+        .catch(err => console.error('Error fetching users:', err));
+}
 
-        async function moderateNote(triggerBtn, action) {
-            const card = triggerBtn.closest('.resource-card');
-            const noteId = card.dataset.noteId;
-            const status = card.querySelector('.form-status');
+function toggleRole(userId, currentRole) {
+    const newRole = currentRole === 'ADMIN' ? 'STUDENT' : 'ADMIN';
+    if (!confirm(`Change user role to \${newRole}?`)) return;
 
-            card.querySelectorAll('button').forEach(b => b.disabled = true);
-            status.textContent = action === 'APPROVE' ? 'Approving…' : 'Rejecting…';
-            status.className = 'form-status';
+    const formData = new URLSearchParams();
+    formData.append('userId', userId);
+    formData.append('action', 'UPDATE_ROLE');
+    formData.append('role', newRole);
 
-            try {
-                const response = await fetch('admin/moderate-note', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ noteId, action })
-                });
-                const result = await response.json();
+    fetch('admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) loadUsers();
+        else alert('Failed to update role.');
+    });
+}
 
-                if (response.ok && result.success) {
-                    card.style.transition = 'opacity 0.3s';
-                    card.style.opacity = '0';
-                    setTimeout(() => {
-                        card.remove();
-                        const remaining = pendingList.querySelectorAll('.resource-card').length;
-                        if (remaining === 0) {
-                            pendingList.innerHTML = '<p class="explorer-status">Nothing pending review right now.</p>';
-                        }
-                        resultSummary.textContent = `${remaining} upload(s) awaiting review.`;
-                    }, 300);
-                } else {
-                    status.textContent = result.message || 'Something went wrong.';
-                    status.className = 'form-status form-status-error';
-                    card.querySelectorAll('button').forEach(b => b.disabled = false);
-                }
-            } catch (err) {
-                status.textContent = 'Could not reach the server.';
-                status.className = 'form-status form-status-error';
-                card.querySelectorAll('button').forEach(b => b.disabled = false);
-            }
-        }
+function deleteUser(userId) {
+    if (!confirm('Are you sure you want to delete this user account?')) return;
 
-        async function loadPending() {
-            try {
-                const response = await fetch('admin/pending-notes');
-                if (!response.ok) throw new Error('Failed to load');
-                const notes = await response.json();
-                renderPending(notes);
-            } catch (err) {
-                pendingList.innerHTML = '<p class="explorer-status">Could not load pending uploads.</p>';
-            }
-        }
+    const formData = new URLSearchParams();
+    formData.append('userId', userId);
+    formData.append('action', 'DELETE_USER');
 
-        (async () => {
-            const ok = await checkAdminAccess();
-            if (ok) loadPending();
-        })();
+    fetch('admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
+    })
+    .then(res => res.json())
+    .then(result => {
+        if (result.success) loadUsers();
+        else alert('Failed to delete user.');
+    });
+}
     </script>
-
 </body>
 </html>
