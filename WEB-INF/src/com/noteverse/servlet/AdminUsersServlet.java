@@ -2,7 +2,6 @@ package com.noteverse.servlet;
 
 import com.noteverse.dao.AdminDAO;
 import com.noteverse.model.User;
-import com.google.gson.Gson;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -24,10 +23,22 @@ public class AdminUsersServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         List<User> users = adminDAO.getAllUsers();
-        String jsonResponse = new Gson().toJson(users);
+        
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < users.size(); i++) {
+            User u = users.get(i);
+            json.append("{")
+                .append("\"userId\":").append(u.getUserId()).append(",")
+                .append("\"fullName\":\"").append(escapeJson(u.getFullName())).append("\",")
+                .append("\"email\":\"").append(escapeJson(u.getEmail())).append("\",")
+                .append("\"role\":\"").append(escapeJson(u.getRole())).append("\"")
+                .append("}");
+            if (i < users.size() - 1) json.append(",");
+        }
+        json.append("]");
 
         try (PrintWriter out = response.getWriter()) {
-            out.print(jsonResponse);
+            out.print(json.toString());
             out.flush();
         }
     }
@@ -39,7 +50,7 @@ public class AdminUsersServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
 
         String userIdStr = request.getParameter("userId");
-        String action = request.getParameter("action"); // Expects 'UPDATE_ROLE' or 'DELETE_USER'
+        String action = request.getParameter("action");
 
         if (userIdStr == null || action == null) {
             response.setStatus(400);
@@ -61,9 +72,14 @@ public class AdminUsersServlet extends HttpServlet {
         if (success) {
             out.print("{\"success\": true, \"message\": \"User action completed successfully.\"}");
         } else {
-            out.setStatus(500);
+            response.setStatus(500);
             out.print("{\"success\": false, \"message\": \"Failed to perform user action.\"}");
         }
         out.flush();
+    }
+
+    private String escapeJson(String val) {
+        if (val == null) return "";
+        return val.replace("\"", "\\\"").replace("\n", " ").replace("\r", "");
     }
 }

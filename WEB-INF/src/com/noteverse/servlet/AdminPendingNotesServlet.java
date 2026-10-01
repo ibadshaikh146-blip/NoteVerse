@@ -2,7 +2,6 @@ package com.noteverse.servlet;
 
 import com.noteverse.dao.AdminDAO;
 import com.noteverse.model.Note;
-import com.google.gson.Gson; // Assuming you use Gson for JSON formatting, or use your project's JSON utility
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -24,16 +23,32 @@ public class AdminPendingNotesServlet extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        // Fetch the list of pending notes from the database
         List<Note> pendingNotes = adminDAO.getPendingNotes();
 
-        // Convert the list to JSON and send it back to the frontend
-        Gson gson = new Gson();
-        String jsonResponse = gson.toJson(pendingNotes);
+        // Build manual JSON array to avoid external dependency issues
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < pendingNotes.size(); i++) {
+            Note n = pendingNotes.get(i);
+            json.append("{")
+                .append("\"noteId\":").append(n.getNoteId()).append(",")
+                .append("\"title\":\"").append(escapeJson(n.getTitle())).append("\",")
+                .append("\"description\":\"").append(escapeJson(n.getDescription())).append("\",")
+                .append("\"semester\":").append(n.getSemester()).append(",")
+                .append("\"noteType\":\"").append(escapeJson(n.getNoteType())).append("\",")
+                .append("\"filePath\":\"").append(escapeJson(n.getFilePath())).append("\"")
+                .append("}");
+            if (i < pendingNotes.size() - 1) json.append(",");
+        }
+        json.append("]");
 
         try (PrintWriter out = response.getWriter()) {
-            out.print(jsonResponse);
+            out.print(json.toString());
             out.flush();
         }
+    }
+
+    private String escapeJson(String val) {
+        if (val == null) return "";
+        return val.replace("\"", "\\\"").replace("\n", " ").replace("\r", "");
     }
 }
