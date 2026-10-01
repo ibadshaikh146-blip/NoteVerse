@@ -3,155 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NoteVerse - Admin Control Center</title>
-    <!-- Link your project's main stylesheet here (update the path if needed, e.g., css/style.css) -->
+    <title>Admin Control Center | NoteVerse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Fallback base styles matching a clean dashboard layout */
+        /* Admin-specific dashboard styling integrated with NoteVerse theme */
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
+            font-family: 'IBM Plex Sans', sans-serif;
+            background-color: #0f172a;
+            color: #e2e8f0;
             margin: 0;
             padding: 0;
-            color: #333;
         }
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 30px;
+        header.admin-header {
+            background-color: #1e293b;
+            border-bottom: 1px solid #334155;
+            padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        header a {
-            color: white;
+        header.admin-header h2 {
+            font-family: 'Fraunces', serif;
+            color: #f8fafc;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        header.admin-header a {
+            color: #94a3b8;
             text-decoration: none;
-            background: #34495e;
-            padding: 8px 15px;
-            border-radius: 4px;
-            font-size: 14px;
+            background: #334155;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: background 0.2s;
         }
-        .container {
+        header.admin-header a:hover {
+            background: #475569;
+            color: #fff;
+        }
+        .admin-container {
             max-width: 1200px;
-            margin: 30px auto;
-            padding: 0 20px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
         }
-        h1, h2 {
-            color: #2c3e50;
+        h1 {
+            font-family: 'Fraunces', serif;
+            font-size: 2rem;
+            color: #f8fafc;
+            margin-bottom: 1.5rem;
         }
-        .card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+        .admin-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
             overflow: hidden;
         }
-        .card-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
+        .admin-card-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #334155;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #fafafa;
+            background: #1e293b;
         }
-        table {
+        .admin-card-header h3 {
+            margin: 0;
+            font-family: 'Fraunces', serif;
+            color: #cbd5e1;
+            font-size: 1.25rem;
+        }
+        table.admin-table {
             width: 100%;
             border-collapse: collapse;
             text-align: left;
         }
-        th, td {
-            padding: 12px 20px;
-            border-bottom: 1px solid #eee;
+        table.admin-table th, table.admin-table td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #334155;
         }
-        th {
-            background-color: #f8f9fa;
-            color: #666;
-            font-size: 13px;
+        table.admin-table th {
+            background-color: #0f172a;
+            color: #94a3b8;
+            font-size: 0.75rem;
             text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-family: 'IBM Plex Mono', monospace;
         }
-        tr:hover {
-            background-color: #fcfcfc;
+        table.admin-table tr:hover {
+            background-color: #26334d;
         }
-        .btn {
-            padding: 6px 12px;
+        .admin-btn {
+            padding: 0.4rem 0.8rem;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            font-family: 'IBM Plex Mono', monospace;
             color: white;
-            margin-right: 5px;
+            margin-right: 0.25rem;
+            transition: opacity 0.2s;
         }
-        .btn-primary { background-color: #3498db; }
-        .btn-success { background-color: #2ecc71; }
-        .btn-danger { background-color: #e74c3c; }
-        .btn-warning { background-color: #f39c12; }
-        .btn:hover { opacity: 0.9; }
-        
+        .btn-primary { background-color: #3b82f6; }
+        .btn-success { background-color: #10b981; }
+        .btn-danger { background-color: #f43f5e; }
+        .btn-warning { background-color: #f59e0b; }
+        .admin-btn:hover { opacity: 0.85; }
+
         /* Modal Styles */
-        .modal {
+        .admin-modal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.75);
             justify-content: center;
             align-items: center;
             z-index: 1000;
         }
-        .modal-content {
-            background: white;
+        .admin-modal-content {
+            background: #1e293b;
+            border: 1px solid #334155;
             width: 80%;
             height: 80%;
-            border-radius: 8px;
+            border-radius: 10px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
         }
-        .modal-header {
-            padding: 15px 20px;
-            background: #2c3e50;
-            color: white;
+        .admin-modal-header {
+            padding: 1rem 1.5rem;
+            background: #0f172a;
+            border-bottom: 1px solid #334155;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .modal-header button {
+        .admin-modal-header h3 {
+            margin: 0;
+            font-family: 'Fraunces', serif;
+            color: #f8fafc;
+        }
+        .admin-modal-header button {
             background: none;
             border: none;
-            color: white;
-            font-size: 20px;
+            color: #94a3b8;
+            font-size: 1.5rem;
             cursor: pointer;
         }
-        .modal-body {
+        .admin-modal-body {
             flex: 1;
-            padding: 10px;
-            background: #eee;
+            padding: 0.5rem;
+            background: #0f172a;
         }
         iframe {
             width: 100%;
             height: 100%;
             border: none;
+            border-radius: 6px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Navbar -->
-    <header>
+    <!-- Header -->
+    <header class="admin-header">
         <h2>NoteVerse Admin</h2>
         <a href="index.html">Back to Site</a>
     </header>
 
     <!-- Main Container -->
-    <div class="container">
+    <div class="admin-container">
         <h1>Platform Control Center</h1>
 
         <!-- Pending Notes Section -->
-        <div class="card">
-            <div class="card-header">
+        <div class="admin-card">
+            <div class="admin-card-header">
                 <h3>Pending Notes Queue</h3>
-                <button class="btn btn-primary" onclick="loadPendingNotes()">Refresh</button>
+                <button class="admin-btn btn-primary" onclick="loadPendingNotes()">Refresh</button>
             </div>
-            <table>
+            <table class="admin-table">
                 <thead>
                     <tr>
                         <th>Title / Details</th>
@@ -161,18 +195,18 @@
                     </tr>
                 </thead>
                 <tbody id="pendingTableBody">
-                    <tr><td colspan="4" style="text-align: center; color: #777;">Loading pending notes...</td></tr>
+                    <tr><td colspan="4" style="text-align: center; color: #94a3b8;">Loading pending notes...</td></tr>
                 </tbody>
             </table>
         </div>
 
         <!-- Student Directory Section -->
-        <div class="card">
-            <div class="card-header">
+        <div class="admin-card">
+            <div class="admin-card-header">
                 <h3>Registered Students Directory</h3>
-                <button class="btn btn-primary" onclick="loadUsers()">Refresh Users</button>
+                <button class="admin-btn btn-primary" onclick="loadUsers()">Refresh Users</button>
             </div>
-            <table>
+            <table class="admin-table">
                 <thead>
                     <tr>
                         <th>Full Name</th>
@@ -182,20 +216,20 @@
                     </tr>
                 </thead>
                 <tbody id="userTableBody">
-                    <tr><td colspan="4" style="text-align: center; color: #777;">Loading users...</td></tr>
+                    <tr><td colspan="4" style="text-align: center; color: #94a3b8;">Loading users...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <!-- PDF Preview Modal -->
-    <div id="previewModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
+    <div id="previewModal" class="admin-modal">
+        <div class="admin-modal-content">
+            <div class="admin-modal-header">
                 <h3>PDF Preview</h3>
                 <button onclick="closePreview()">&times;</button>
             </div>
-            <div class="modal-body">
+            <div class="admin-modal-body">
                 <iframe id="pdfViewerFrame"></iframe>
             </div>
         </div>
@@ -216,7 +250,7 @@
                     tbody.innerHTML = '';
 
                     if (data.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">No pending notes waiting for approval.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #94a3b8;">No pending notes waiting for approval. Great job!</td></tr>`;
                         return;
                     }
 
@@ -224,15 +258,15 @@
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td>
-                                <strong>\${note.title}</strong><br>
-                                <small style="color: #666;">\${note.description || 'No description provided.'}</small>
+                                <strong style="color: #f8fafc;">\${note.title}</strong><br>
+                                <small style="color: #94a3b8;">\${note.description || 'No description provided.'}</small>
                             </td>
                             <td>Sem \${note.semester}</td>
                             <td>\${note.noteType}</td>
                             <td style="text-align: center;">
-                                <button class="btn btn-primary" onclick="previewPdf('\${note.filePath}')">Preview</button>
-                                <button class="btn btn-success" onclick="moderateNote(\${note.noteId}, 'APPROVE')">Approve</button>
-                                <button class="btn btn-danger" onclick="moderateNote(\${note.noteId}, 'DELETE')">Delete</button>
+                                <button class="admin-btn btn-primary" onclick="previewPdf('\${note.filePath}')">Preview</button>
+                                <button class="admin-btn btn-success" onclick="moderateNote(\${note.noteId}, 'APPROVE')">Approve</button>
+                                <button class="admin-btn btn-danger" onclick="moderateNote(\${note.noteId}, 'DELETE')">Delete</button>
                             </td>
                         `;
                         tbody.appendChild(tr);
@@ -240,7 +274,7 @@
                 })
                 .catch(err => {
                     console.error('Error fetching pending notes:', err);
-                    document.getElementById('pendingTableBody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: #e74c3c;">Failed to load pending notes.</td></tr>`;
+                    document.getElementById('pendingTableBody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: #f43f5e;">Failed to load pending notes.</td></tr>`;
                 });
         }
 
@@ -275,19 +309,19 @@
                     tbody.innerHTML = '';
 
                     if (data.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #777;">No registered users found.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #94a3b8;">No registered users found.</td></tr>`;
                         return;
                     }
 
                     data.forEach(user => {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
-                            <td><strong>\${user.fullName}</strong></td>
+                            <td><strong style="color: #f8fafc;">\${user.fullName}</strong></td>
                             <td>\${user.email}</td>
                             <td>\${user.role}</td>
                             <td style="text-align: center;">
-                                <button class="btn btn-warning" onclick="toggleRole(\${user.userId}, '\${user.role}')">Toggle Role</button>
-                                <button class="btn btn-danger" onclick="deleteUser(\${user.userId})">Remove</button>
+                                <button class="admin-btn btn-warning" onclick="toggleRole(\${user.userId}, '\${user.role}')">Toggle Role</button>
+                                <button class="admin-btn btn-danger" onclick="deleteUser(\${user.userId})">Remove</button>
                             </td>
                         `;
                         tbody.appendChild(tr);
