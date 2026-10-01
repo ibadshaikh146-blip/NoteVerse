@@ -12,10 +12,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 
 @WebServlet("/upload")
 @MultipartConfig(
@@ -68,26 +71,33 @@ public class NoteUploadServlet extends HttpServlet {
 
         String fileUrl;
         try {
-            String cloudinaryEnv = System.getenv("CLOUDINARY_URL");
-            if (cloudinaryEnv == null || !cloudinaryEnv.startsWith("cloudinary://")) {
-                throw new RuntimeException("CLOUDINARY_URL environment variable is not configured correctly.");
+            // Define local upload directory inside the web application
+            String uploadPath = getServletContext().getRealPath("") + File.separator + "uploads";
+            File uploadDir = new File(uploadPath);
+            if (!uploadDir.exists()) {
+                uploadDir.mkdir();
             }
 
-            String withoutScheme = cloudinaryEnv.substring("cloudinary://".length());
-            String[] parts = withoutScheme.split("@");
-            String[] credentials = parts[0].split(":");
-            String apiKey = credentials[0].replace("\"", "").trim();
-            String apiSecret = credentials[1].replace("\"", "").trim();
-            String cloudName = parts[1].replace("\"", "").trim();
+            // Generate a unique file name to prevent overwriting
+            String originalFileName = filePart.getSubmittedFileName();
+            String uniqueFileName = UUID.randomUUID().toString() + "_" + (originalFileName != null ? originalFileName.replaceAll("\\s+", "_") : "note.pdf");
+            File filePath = new File(uploadPath + File.separator + uniqueFileName);
 
-            fileUrl = uploadToCloudinary(filePart, cloudName, apiKey, apiSecret);
+            // Save the file locally on the server
+            try (InputStream fileContent = filePart.getInputStream()) {
+                Files.copy(fileContent, filePath.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            // Construct the relative file URL path
+            fileUrl = "uploads/" + uniqueFileName;
 
         } catch (Exception e) {
             e.printStackTrace();
-            respond(response, 500, false, "Cloud upload failed: " + e.getMessage());
+            respond(response, 500, false, "Server storage failed: " + e.getMessage());
             return;
         }
 
+        // Save note record into Aiven MySQL database
         Note note = new Note();
         note.setTitle(title.trim());
         note.setDescription(description != null ? description.trim() : "");
@@ -104,80 +114,6 @@ public class NoteUploadServlet extends HttpServlet {
         } else {
             respond(response, 500, false, "Something went wrong saving your upload details.");
         }
-    }
-
-    private String uploadToCloudinary(Part filePart, String cloudName, String apiKey, String apiSecret) throws IOException {
-        String boundary = "===" + System.currentTimeMillis() + "===";
-        
-        // Embed credentials directly into the URL for reliable Java HTTP Basic Authentication
-        URL url = new URL("https://" + apiKey + ":" + apiSecret + "@api.cloudinary.com/v1_1/" + cloudName + "/auto/upload");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-
-        conn.setUseCaches(false);
-        conn.setDoOutput(true);
-        conn.setDoInput(true);
-        conn.setRequestMethod("POST");
-        conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
-
-        try (OutputStream outputStream = conn.getOutputStream()) {
-            // Force public access mode
-            writeFormField(outputStream, boundary, "access_mode", "public");
-
-            String fileHeader = "--" + boundary + "\r\n" +
-                    "Content-Disposition: form-data; name=\"file\"; filename=\"" + filePart.getSubmittedFileName() + "\"\r\n" +
-                    "Content-Type: application/pdf\r\n\r\n";
-            outputStream.write(fileHeader.getBytes(StandardCharsets.UTF_8));
-
-            try (InputStream inputStream = filePart.getInputStream()) {
-                byte[] buffer = new byte[4096];
-                int bytesRead;
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    outputStream.write(buffer, 0, bytesRead);
-                }
-            }
-
-            String footer = "\r\n--" + boundary + "--\r\n";
-            outputStream.write(footer.getBytes(StandardCharsets.UTF_8));
-            outputStream.flush();
-        }
-
-        int responseCode = conn.getResponseCode();
-        if (responseCode != 200) {
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8))) {
-                StringBuilder errorResponse = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    errorResponse.append(line);
-                }
-                throw new IOException("Cloudinary error (" + responseCode + "): " + errorResponse.toString());
-            }
-        }
-
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-            StringBuilder jsonResponse = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                jsonResponse.append(line);
-            }
-            
-            String json = jsonResponse.toString();
-            String searchKey = "\"secure_url\":\"";
-            int startIndex = json.indexOf(searchKey);
-            if (startIndex != -1) {
-                startIndex += searchKey.length();
-                int endIndex = json.indexOf("\"", startIndex);
-                return json.substring(startIndex, endIndex).replace("\\/", "/");
-            } else {
-                throw new IOException("Could not parse secure_url from Cloudinary response.");
-            }
-        }
-    }
-
-    private void writeFormField(OutputStream out, String boundary, String name, String value) throws IOException {
-        String field = "--" + boundary + "\r\n" +
-                "Content-Disposition: form-data; name=\"" + name + "\"\r\n\r\n" +
-                value + "\r\n";
-        out.write(field.getBytes(StandardCharsets.UTF_8));
     }
 
     private void respond(HttpServletResponse response, int statusCode, boolean success, String message)
