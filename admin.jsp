@@ -1,3 +1,4 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,156 +9,157 @@
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Admin-specific dashboard styling integrated with NoteVerse theme */
+        /* NoteVerse Authentic Theme Styling */
         body {
             font-family: 'IBM Plex Sans', sans-serif;
-            background-color: #0f172a;
-            color: #e2e8f0;
+            background-color: #f4f5f0;
+            color: #1e293b;
             margin: 0;
             padding: 0;
         }
-        header.admin-header {
-            background-color: #1e293b;
-            border-bottom: 1px solid #334155;
-            padding: 1rem 2rem;
+        /* Match exact header style from site */
+        header.site-header {
+            background-color: #141c2c;
+            color: #ffffff;
+            padding: 1.5rem 3rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        header.admin-header h2 {
+        header.site-header .logo {
             font-family: 'Fraunces', serif;
-            color: #f8fafc;
-            margin: 0;
             font-size: 1.5rem;
-        }
-        header.admin-header a {
-            color: #94a3b8;
+            color: #ffffff;
             text-decoration: none;
-            background: #334155;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            font-size: 0.875rem;
-            transition: background 0.2s;
+            letter-spacing: 0.05em;
         }
-        header.admin-header a:hover {
-            background: #475569;
-            color: #fff;
+        header.site-header nav a {
+            color: #cbd5e1;
+            text-decoration: none;
+            margin-left: 2rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 500;
         }
-        .admin-container {
+        header.site-header nav a:hover {
+            color: #ffffff;
+        }
+        .container {
             max-width: 1200px;
-            margin: 2rem auto;
+            margin: 2.5rem auto;
             padding: 0 1.5rem;
         }
         h1 {
             font-family: 'Fraunces', serif;
-            font-size: 2rem;
-            color: #f8fafc;
-            margin-bottom: 1.5rem;
-        }
-        .admin-card {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            font-size: 2.2rem;
+            color: #141c2c;
             margin-bottom: 2rem;
+        }
+        .card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+            margin-bottom: 2.5rem;
             overflow: hidden;
         }
-        .admin-card-header {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #334155;
+        .card-header {
+            padding: 1.25rem 1.75rem;
+            border-bottom: 1px solid #e2e8f0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #1e293b;
+            background: #ffffff;
         }
-        .admin-card-header h3 {
+        .card-header h3 {
             margin: 0;
             font-family: 'Fraunces', serif;
-            color: #cbd5e1;
-            font-size: 1.25rem;
+            color: #141c2c;
+            font-size: 1.35rem;
         }
-        table.admin-table {
+        table {
             width: 100%;
             border-collapse: collapse;
             text-align: left;
         }
-        table.admin-table th, table.admin-table td {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #334155;
+        th, td {
+            padding: 1rem 1.75rem;
+            border-bottom: 1px solid #f1f5f9;
         }
-        table.admin-table th {
-            background-color: #0f172a;
-            color: #94a3b8;
+        th {
+            background-color: #f8fafc;
+            color: #64748b;
             font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
             font-family: 'IBM Plex Mono', monospace;
         }
-        table.admin-table tr:hover {
-            background-color: #26334d;
+        tr:hover {
+            background-color: #fafbfc;
         }
-        .admin-btn {
-            padding: 0.4rem 0.8rem;
+        .btn {
+            padding: 0.45rem 0.9rem;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-size: 0.75rem;
-            font-weight: 500;
+            font-weight: 600;
             font-family: 'IBM Plex Mono', monospace;
             color: white;
-            margin-right: 0.25rem;
+            margin-right: 0.3rem;
             transition: opacity 0.2s;
         }
-        .btn-primary { background-color: #3b82f6; }
-        .btn-success { background-color: #10b981; }
-        .btn-danger { background-color: #f43f5e; }
-        .btn-warning { background-color: #f59e0b; }
-        .admin-btn:hover { opacity: 0.85; }
+        .btn-primary { background-color: #2563eb; }
+        .btn-success { background-color: #16a34a; }
+        .btn-danger { background-color: #dc2626; }
+        .btn-warning { background-color: #d97706; }
+        .btn:hover { opacity: 0.9; }
 
         /* Modal Styles */
-        .admin-modal {
+        .modal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(20, 28, 44, 0.75);
             justify-content: center;
             align-items: center;
             z-index: 1000;
         }
-        .admin-modal-content {
-            background: #1e293b;
-            border: 1px solid #334155;
+        .modal-content {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
             width: 80%;
             height: 80%;
-            border-radius: 10px;
+            border-radius: 12px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
         }
-        .admin-modal-header {
-            padding: 1rem 1.5rem;
-            background: #0f172a;
-            border-bottom: 1px solid #334155;
+        .modal-header {
+            padding: 1.25rem 1.75rem;
+            background: #141c2c;
+            color: white;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        .admin-modal-header h3 {
+        .modal-header h3 {
             margin: 0;
             font-family: 'Fraunces', serif;
-            color: #f8fafc;
         }
-        .admin-modal-header button {
+        .modal-header button {
             background: none;
             border: none;
-            color: #94a3b8;
+            color: #ffffff;
             font-size: 1.5rem;
             cursor: pointer;
         }
-        .admin-modal-body {
+        .modal-body {
             flex: 1;
-            padding: 0.5rem;
-            background: #0f172a;
+            padding: 1rem;
+            background: #f1f5f9;
         }
         iframe {
             width: 100%;
@@ -169,23 +171,27 @@
 </head>
 <body>
 
-    <!-- Header -->
-    <header class="admin-header">
-        <h2>NoteVerse Admin</h2>
-        <a href="index.html">Back to Site</a>
+    <!-- Header matching NoteVerse theme -->
+    <header class="site-header">
+        <a href="index.html" class="logo">—NoteVerse Admin</a>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="notes-explorer.html">Browse</a>
+            <a href="my-account.html">My Account</a>
+        </nav>
     </header>
 
     <!-- Main Container -->
-    <div class="admin-container">
+    <div class="container">
         <h1>Platform Control Center</h1>
 
         <!-- Pending Notes Section -->
-        <div class="admin-card">
-            <div class="admin-card-header">
+        <div class="card">
+            <div class="card-header">
                 <h3>Pending Notes Queue</h3>
-                <button class="admin-btn btn-primary" onclick="loadPendingNotes()">Refresh</button>
+                <button class="btn btn-primary" onclick="loadPendingNotes()">Refresh</button>
             </div>
-            <table class="admin-table">
+            <table>
                 <thead>
                     <tr>
                         <th>Title / Details</th>
@@ -195,18 +201,18 @@
                     </tr>
                 </thead>
                 <tbody id="pendingTableBody">
-                    <tr><td colspan="4" style="text-align: center; color: #94a3b8;">Loading pending notes...</td></tr>
+                    <tr><td colspan="4" style="text-align: center; color: #64748b;">Loading pending notes...</td></tr>
                 </tbody>
             </table>
         </div>
 
         <!-- Student Directory Section -->
-        <div class="admin-card">
-            <div class="admin-card-header">
+        <div class="card">
+            <div class="card-header">
                 <h3>Registered Students Directory</h3>
-                <button class="admin-btn btn-primary" onclick="loadUsers()">Refresh Users</button>
+                <button class="btn btn-primary" onclick="loadUsers()">Refresh Users</button>
             </div>
-            <table class="admin-table">
+            <table>
                 <thead>
                     <tr>
                         <th>Full Name</th>
@@ -216,20 +222,20 @@
                     </tr>
                 </thead>
                 <tbody id="userTableBody">
-                    <tr><td colspan="4" style="text-align: center; color: #94a3b8;">Loading users...</td></tr>
+                    <tr><td colspan="4" style="text-align: center; color: #64748b;">Loading users...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <!-- PDF Preview Modal -->
-    <div id="previewModal" class="admin-modal">
-        <div class="admin-modal-content">
-            <div class="admin-modal-header">
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
                 <h3>PDF Preview</h3>
                 <button onclick="closePreview()">&times;</button>
             </div>
-            <div class="admin-modal-body">
+            <div class="modal-body">
                 <iframe id="pdfViewerFrame"></iframe>
             </div>
         </div>
@@ -250,7 +256,7 @@
                     tbody.innerHTML = '';
 
                     if (data.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #94a3b8;">No pending notes waiting for approval. Great job!</td></tr>`;
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748b;">No pending notes waiting for approval. Great job!</td></tr>';
                         return;
                     }
 
@@ -258,15 +264,15 @@
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
                             <td>
-                                <strong style="color: #f8fafc;">\${note.title}</strong><br>
-                                <small style="color: #94a3b8;">\${note.description || 'No description provided.'}</small>
+                                <strong style="color: #141c2c;">${note.title}</strong><br>
+                                <small style="color: #646f82;">${note.description || 'No description provided.'}</small>
                             </td>
-                            <td>Sem \${note.semester}</td>
-                            <td>\${note.noteType}</td>
+                            <td>Sem ${note.semester}</td>
+                            <td>${note.noteType}</td>
                             <td style="text-align: center;">
-                                <button class="admin-btn btn-primary" onclick="previewPdf('\${note.filePath}')">Preview</button>
-                                <button class="admin-btn btn-success" onclick="moderateNote(\${note.noteId}, 'APPROVE')">Approve</button>
-                                <button class="admin-btn btn-danger" onclick="moderateNote(\${note.noteId}, 'DELETE')">Delete</button>
+                                <button class="btn btn-primary" onclick="previewPdf('${note.filePath}')">Preview</button>
+                                <button class="btn btn-success" onclick="moderateNote(${note.noteId}, 'APPROVE')">Approve</button>
+                                <button class="btn btn-danger" onclick="moderateNote(${note.noteId}, 'DELETE')">Delete</button>
                             </td>
                         `;
                         tbody.appendChild(tr);
@@ -274,12 +280,12 @@
                 })
                 .catch(err => {
                     console.error('Error fetching pending notes:', err);
-                    document.getElementById('pendingTableBody').innerHTML = `<tr><td colspan="4" style="text-align: center; color: #f43f5e;">Failed to load pending notes.</td></tr>`;
+                    document.getElementById('pendingTableBody').innerHTML = '<tr><td colspan="4" style="text-align: center; color: #dc2626;">Failed to load pending notes.</td></tr>';
                 });
         }
 
         function moderateNote(noteId, action) {
-            if (!confirm(`Are you sure you want to \${action.toLowerCase()} this note?`)) return;
+            if (!confirm('Are you sure you want to ' + action.toLowerCase() + ' this note?')) return;
 
             const formData = new URLSearchParams();
             formData.append('noteId', noteId);
@@ -309,19 +315,19 @@
                     tbody.innerHTML = '';
 
                     if (data.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #94a3b8;">No registered users found.</td></tr>`;
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #64748b;">No registered users found.</td></tr>';
                         return;
                     }
 
                     data.forEach(user => {
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
-                            <td><strong style="color: #f8fafc;">\${user.fullName}</strong></td>
-                            <td>\${user.email}</td>
-                            <td>\${user.role}</td>
+                            <td><strong style="color: #141c2c;">${user.fullName}</strong></td>
+                            <td>${user.email}</td>
+                            <td>${user.role}</td>
                             <td style="text-align: center;">
-                                <button class="admin-btn btn-warning" onclick="toggleRole(\${user.userId}, '\${user.role}')">Toggle Role</button>
-                                <button class="admin-btn btn-danger" onclick="deleteUser(\${user.userId})">Remove</button>
+                                <button class="btn btn-warning" onclick="toggleRole(${user.userId}, '${user.role}')">Toggle Role</button>
+                                <button class="btn btn-danger" onclick="deleteUser(${user.userId})">Remove</button>
                             </td>
                         `;
                         tbody.appendChild(tr);
@@ -332,7 +338,7 @@
 
         function toggleRole(userId, currentRole) {
             const newRole = currentRole === 'ADMIN' ? 'STUDENT' : 'ADMIN';
-            if (!confirm(`Change user role to \${newRole}?`)) return;
+            if (!confirm('Change user role to ' + newRole + '?')) return;
 
             const formData = new URLSearchParams();
             formData.append('userId', userId);
@@ -365,7 +371,7 @@
             })
             .then(res => res.json())
             .then(result => {
-                if (result.success) loadUsers();
+                if (result.save || result.success) loadUsers();
                 else alert('Failed to delete user.');
             });
         }
