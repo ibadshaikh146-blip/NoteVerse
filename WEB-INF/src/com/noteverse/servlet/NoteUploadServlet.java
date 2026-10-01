@@ -16,7 +16,6 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
 @WebServlet("/upload")
 @MultipartConfig(
@@ -77,12 +76,11 @@ public class NoteUploadServlet extends HttpServlet {
             String withoutScheme = cloudinaryEnv.substring("cloudinary://".length());
             String[] parts = withoutScheme.split("@");
             String[] credentials = parts[0].split(":");
-            String apiKey = credentials[0];
-            String apiSecret = credentials[1];
-            String cloudName = parts[1];
+            String apiKey = credentials[0].replace("\"", "").trim();
+            String apiSecret = credentials[1].replace("\"", "").trim();
+            String cloudName = parts[1].replace("\"", "").trim();
 
-            // Uploads to Cloudinary auto endpoint using Basic Auth with public access mode
-            fileUrl = uploadToCloudinaryBasicAuth(filePart, cloudName, apiKey, apiSecret);
+            fileUrl = uploadToCloudinary(filePart, cloudName, apiKey, apiSecret);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -108,10 +106,11 @@ public class NoteUploadServlet extends HttpServlet {
         }
     }
 
-    private String uploadToCloudinaryBasicAuth(Part filePart, String cloudName, String apiKey, String apiSecret) throws IOException {
+    private String uploadToCloudinary(Part filePart, String cloudName, String apiKey, String apiSecret) throws IOException {
         String boundary = "===" + System.currentTimeMillis() + "===";
-        // Using auto/upload endpoint so Cloudinary handles PDFs correctly as viewable documents
-        URL url = new URL("https://api.cloudinary.com/v1_1/" + cloudName.trim() + "/auto/upload");
+        
+        // Embed credentials directly into the URL for reliable Java HTTP Basic Authentication
+        URL url = new URL("https://" + apiKey + ":" + apiSecret + "@api.cloudinary.com/v1_1/" + cloudName + "/auto/upload");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
         conn.setUseCaches(false);
@@ -120,15 +119,8 @@ public class NoteUploadServlet extends HttpServlet {
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
 
-        String cleanApiKey = apiKey.replace("\"", "").trim();
-        String cleanApiSecret = apiSecret.replace("\"", "").trim();
-
-        String authString = cleanApiKey + ":" + cleanApiSecret;
-        String encodedAuth = Base64.getEncoder().encodeToString(authString.getBytes(StandardCharsets.UTF_8));
-        conn.setRequestProperty("Authorization", "Basic " + encodedAuth);
-
         try (OutputStream outputStream = conn.getOutputStream()) {
-            // Explicitly force public accessibility to prevent 401 ACL delivery errors
+            // Force public access mode
             writeFormField(outputStream, boundary, "access_mode", "public");
 
             String fileHeader = "--" + boundary + "\r\n" +
