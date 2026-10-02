@@ -8,6 +8,7 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
@@ -17,11 +18,17 @@ public class AdminPendingNotesServlet extends HttpServlet {
     private final AdminDAO adminDAO = new AdminDAO();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+
+        if (!isAdmin(request)) {
+            response.setStatus(403);
+            response.getWriter().print("{\"success\":false,\"message\":\"Admins only.\"}");
+            return;
+        }
 
         List<Note> pendingNotes = adminDAO.getPendingNotes();
 
@@ -45,6 +52,13 @@ public class AdminPendingNotesServlet extends HttpServlet {
             out.print(json.toString());
             out.flush();
         }
+    }
+
+    static boolean isAdmin(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        return session != null
+            && session.getAttribute("userId") != null
+            && "ADMIN".equals(session.getAttribute("role"));
     }
 
     private String escapeJson(String val) {

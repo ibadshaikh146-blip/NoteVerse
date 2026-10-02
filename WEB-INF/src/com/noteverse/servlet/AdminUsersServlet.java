@@ -17,13 +17,19 @@ public class AdminUsersServlet extends HttpServlet {
     private final AdminDAO adminDAO = new AdminDAO();
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
+        if (!AdminPendingNotesServlet.isAdmin(request)) {
+            response.setStatus(403);
+            response.getWriter().print("{\"success\":false,\"message\":\"Admins only.\"}");
+            return;
+        }
+
         List<User> users = adminDAO.getAllUsers();
-        
+
         StringBuilder json = new StringBuilder("[");
         for (int i = 0; i < users.size(); i++) {
             User u = users.get(i);
@@ -44,10 +50,16 @@ public class AdminUsersServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+
+        if (!AdminPendingNotesServlet.isAdmin(request)) {
+            response.setStatus(403);
+            response.getWriter().print("{\"success\":false,\"message\":\"Admins only.\"}");
+            return;
+        }
 
         String userIdStr = request.getParameter("userId");
         String action = request.getParameter("action");
@@ -58,7 +70,15 @@ public class AdminUsersServlet extends HttpServlet {
             return;
         }
 
-        int userId = Integer.parseInt(userIdStr);
+        int userId;
+        try {
+            userId = Integer.parseInt(userIdStr);
+        } catch (NumberFormatException e) {
+            response.setStatus(400);
+            response.getWriter().print("{\"success\": false, \"message\": \"Invalid user ID.\"}");
+            return;
+        }
+
         boolean success = false;
 
         if ("UPDATE_ROLE".equalsIgnoreCase(action)) {

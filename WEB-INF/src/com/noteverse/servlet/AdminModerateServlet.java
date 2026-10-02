@@ -17,11 +17,16 @@ public class AdminModerateServlet extends HttpServlet {
     private final AdminDAO adminDAO = new AdminDAO();
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+
+        if (!AdminPendingNotesServlet.isAdmin(request)) {
+            respond(response, 403, false, "Admins only.");
+            return;
+        }
 
         String noteIdStr = request.getParameter("noteId");
         String action = request.getParameter("action"); // Expects 'APPROVE', 'REJECT', or 'DELETE'
@@ -45,7 +50,9 @@ public class AdminModerateServlet extends HttpServlet {
         } else if ("REJECT".equalsIgnoreCase(action)) {
             success = adminDAO.updateNoteStatus(noteId, "REJECTED");
         } else if ("DELETE".equalsIgnoreCase(action)) {
-            // Clean up the local PDF file from server storage before deleting database row
+            // Clean up a LOCAL PDF file from server storage, if this note predates
+            // the Cloudinary migration. Cloudinary-hosted files (https://...) are
+            // left as-is — deleting those would need a separate Cloudinary API call.
             String filePath = adminDAO.getFilePathById(noteId);
             if (filePath != null && filePath.startsWith("uploads/")) {
                 File file = new File(getServletContext().getRealPath("") + File.separator + filePath);
@@ -63,7 +70,7 @@ public class AdminModerateServlet extends HttpServlet {
         }
     }
 
-    private void respond(HttpServletResponse response, int statusCode, boolean success, String message) 
+    private void respond(HttpServletResponse response, int statusCode, boolean success, String message)
             throws IOException {
         response.setStatus(statusCode);
         try (PrintWriter out = response.getWriter()) {

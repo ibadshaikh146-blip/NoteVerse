@@ -14,12 +14,12 @@ public class AdminDAO {
     // Fetch all notes waiting for admin review
     public List<Note> getPendingNotes() {
         List<Note> notes = new ArrayList<>();
-        String sql = "SELECT * FROM notes WHERE status = 'PENDING' ORDER BY uploaded_at DESC";
-        
+        String sql = "SELECT * FROM notes WHERE status = 'PENDING' ORDER BY upload_date DESC";
+
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-             
+
             while (rs.next()) {
                 Note note = new Note();
                 note.setNoteId(rs.getInt("note_id"));
@@ -89,11 +89,11 @@ public class AdminDAO {
     public List<User> getAllUsers() {
         List<User> users = new ArrayList<>();
         String sql = "SELECT user_id, full_name, email, role, created_at FROM users ORDER BY created_at DESC";
-        
+
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-             
+
             while (rs.next()) {
                 User user = new User();
                 user.setUserId(rs.getInt("user_id"));
